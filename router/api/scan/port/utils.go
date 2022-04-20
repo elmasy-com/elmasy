@@ -20,8 +20,8 @@ type Params struct {
 }
 
 type PortString struct {
-	Port  string
-	State string
+	Port  string `json:"port"`
+	State string `json:"state"`
 }
 
 // Parse the query params and handle error.

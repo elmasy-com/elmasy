@@ -1,7 +1,6 @@
 package port
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -36,8 +35,6 @@ func Get(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"errors": errsStr})
 		return
 	}
-
-	fmt.Printf("Port scan result: %#v\n", result)
 
 	c.JSON(http.StatusOK, gin.H{"result": convertResultString(result)})
 }

@@ -1,0 +1,11 @@
+[Unit]
+Description=Elmasy server
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/elmasy
+ExecStart=/opt/elmasy/elmasy
+
+[Install]
+WantedBy=multi-user.target

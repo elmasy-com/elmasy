@@ -1,0 +1,55 @@
+package tls12
+
+import (
+	"github.com/elmasy-com/bytebuilder"
+	"github.com/elmasy-com/protocols/tls/ciphersuite"
+)
+
+/*
+	struct {
+	    uint32 gmt_unix_time;
+	    opaque random_bytes[28];
+	} Random;
+
+	struct {
+		ProtocolVersion client_version;
+		Random random;
+		SessionID session_id;
+		CipherSuite cipher_suites<2..2^16-1>;
+		CompressionMethod compression_methods<1..2^8-1>;
+	} ClientHello;
+*/
+
+func marshalClientHello(ciphers []ciphersuite.CipherSuite) []byte {
+
+	buf := bytebuilder.NewEmpty()
+
+	buf.WriteBytes(VER_MAJOR, VER_MINOR)
+
+	buf.WriteBytes(marshalRandom()...)
+
+	buf.WriteBytes(marshalSessionID()...)
+
+	buf.WriteVector(ciphersuite.Marshal(ciphers), 16)
+
+	buf.WriteVector([]byte{0}, 8)
+
+	// Add extensions by hand (very ugly, i know) to create a solid default.
+
+	// Extensions length
+	buf.WriteUint16(74)
+
+	// supported_groups
+	buf.WriteBytes(0x00, 0x0A, 0x00, 0x0C, 0x00, 0x0A, 0x00, 0x1D, 0x00, 0x17, 0x00, 0x1e, 0x00, 0x19, 0x00, 0x18)
+
+	// ec_point_formats
+	buf.WriteBytes(0x00, 0x0B, 0x00, 0x04, 0x03, 0x00, 0x01, 0x02)
+
+	// signature_algorithms
+	buf.WriteBytes(0x00, 0x0D, 0x00, 0x2A, 0x00, 0x28, 0x04, 0x03, 0x05, 0x03, 0x06, 0x03, 0x08, 0x07, 0x08, 0x08, 0x08, 0x09, 0x08, 0x0A, 0x08, 0x0B,
+		0x08, 0x04, 0x08, 0x05, 0x08, 0x06, 0x04, 0x01, 0x05, 0x01, 0x06, 0x01, 0x03, 0x03, 0x03, 0x01, 0x03, 0x02, 0x04, 0x02, 0x05, 0x02, 0x06, 0x02)
+
+	// extended_master_secret
+	buf.WriteBytes(0x00, 0x17, 0x00, 0x00)
+	return buf.Bytes()
+}

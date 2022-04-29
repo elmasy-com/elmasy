@@ -1,0 +1,288 @@
+openapi: 3.0.0
+info:
+  version: 0.0.1
+  title: Elmasy API
+  description: Documentation for Elmasy API.
+
+servers:
+  - url: https://elmasy.com/api
+  - url: http://localhost:8080/api
+
+tags:
+  - name: Basic
+    description: Basic API.
+  - name: Random
+    description: Return random things.
+  - name: Protocol
+    description: Protocol implementations.
+  - name: Scan
+    description: Scanner.
+
+paths:
+
+  /ip:
+    get:
+      summary: Your public IP address.
+      description: Returns your public IP address.
+      tags:
+        - Basic
+      responses:
+        200:
+          description: Success
+          content:
+            "*/*":
+              schema:
+                type: string
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultString"       
+
+  /random/ip/{version}:
+    get:
+      summary: Get a random public IP address.
+      description: Returns a random public IP address.
+      tags:
+        - Random
+      parameters:
+        - name: version
+          description: The version of the IP protocol. Valid versions are `ipv4`/`4` or `ipv6`/`6`.
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultString"
+        400:
+          description: Invalid IP protocol version.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /random/port:
+    get:
+      summary: Get a random port number.
+      description: Returns a random port.
+      tags:
+        - Random
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultString"
+            "*/*":
+              schema:
+                type: string
+
+  /protocol/dns/{type}/{name}:
+    get:
+      summary: DNS Lookup.
+      description: >
+        Do a DNS lookup.
+      tags:
+        - Protocol
+      parameters:
+        - name: type
+          description: The question type. Can be `A`, `AAAA`, `MX` or `TXT`.
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: name
+          description: The domain name.
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Successful query.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultArrayString"
+        400:
+          description: Invalid type or domain.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: The domain name not exist (`NXDOMAIN`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: >
+            Query or server error. DNS Response codes returned: `FORMERR`, `SERVFAIL`,
+            `NOTIMP`, `REFUSED`, `YXDOMAIN`, `XRRSET`, `NOTAUTH` and `NOTZONE`.
+            Can be other unknown server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  
+  /protocol/tls:
+    get:
+      summary: Analyze SSL/TLS.
+      description: >
+        Analyze SSL/TLS on ip:port. Returns the supported ciphers.
+      tags:
+        - Protocol
+      parameters:
+        - name: version
+          description: Specify the SSL/TLS version. Can be `ssl30`, `tls10`, `tls11` or `tls12`.
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: network
+          description: Target network. Can be `tcp` or `udp`. Defaults to `tcp`.
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: ip
+          description: The target IP address.
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: port
+          description: The target port.
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  supported:
+                    type: boolean
+                  ciphers:
+                    type: array
+                    items:
+                      type: string
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: An error occured while scanning.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /scan/port:
+    get:
+      summary: Port scan
+      description: Port scanner API. Scan up to 100 ports.
+      tags:
+        - Scan
+      parameters:
+        - name: technique
+          description: The portscan technique. Can be `syn`/`stealth` or `connect`. If omitted, `connect` is used.
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: ip
+          description: The target IP address.
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: ports
+          description: >
+            A comma separated list of ports or a singe port without comma.
+            Example: `22,80,44`.
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: >
+            Success. This not mean that the port is open!
+            The possible results are: `open`, `closed` or `filtered`
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        port:
+                          type: string
+                        state:
+                          type: string
+        400:
+          description: Invalid or missing query parameter.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: The address is blacklisted. Not scanning!
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description:  Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorArray"
+
+
+
+components:
+  
+  schemas:
+    ResultString:
+      type: object
+      properties:
+        result:
+          type: string
+      
+    ResultArrayString:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: string
+      
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+    
+    ErrorArray:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: string

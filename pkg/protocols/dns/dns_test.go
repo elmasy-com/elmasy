@@ -42,3 +42,15 @@ func TestQueryTXT(t *testing.T) {
 		t.Fatalf("TestQueryTXT failed: %s\n", err)
 	}
 }
+
+func TestProbe(t *testing.T) {
+
+	e, err := Probe("udp", "1.1.1.1", "53")
+	if err != nil {
+		t.Fatalf("FAIL: %s", err)
+	}
+
+	if !e {
+		t.Fatalf("TestProbe failed: 1.1.1.1:53 should be a valid DNS server")
+	}
+}

@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/elmasy-com/protocols/tls/tls11"
+	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls11"
 )
 
 func main() {

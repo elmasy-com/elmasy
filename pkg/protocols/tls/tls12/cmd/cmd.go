@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/elmasy-com/protocols/tls/tls12"
+	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls12"
 )
 
 func main() {

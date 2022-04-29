@@ -168,7 +168,9 @@ func Scan(network, address string, timeout time.Duration) (TLS11, error) {
 
 func Probe(network, ip, port string, timeout time.Duration) (bool, error) {
 
-	r, err := Scan(network, ip+":"+port, timeout)
+	ciphers := ciphersuite.Get(ciphersuite.TLS11)
+
+	r, err := handshake(network, ip+":"+port, timeout, ciphers)
 
 	return r.Supported, err
 }

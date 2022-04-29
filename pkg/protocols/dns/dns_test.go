@@ -1,6 +1,9 @@
 package dns
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestQueryA(t *testing.T) {
 
@@ -45,7 +48,7 @@ func TestQueryTXT(t *testing.T) {
 
 func TestProbe(t *testing.T) {
 
-	e, err := Probe("udp", "1.1.1.1", "53")
+	e, err := Probe("udp", "1.1.1.1", "53", 2*time.Second)
 	if err != nil {
 		t.Fatalf("FAIL: %s", err)
 	}

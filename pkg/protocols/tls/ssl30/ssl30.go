@@ -167,9 +167,9 @@ func Scan(network, address string, timeout time.Duration) (SSL30, error) {
 	return result, nil
 }
 
-func IsSupported(network, address string, timeout time.Duration) (bool, error) {
+func Probe(network, ip, port string, timeout time.Duration) (bool, error) {
 
-	r, err := Scan(network, address, timeout)
+	r, err := Scan(network, ip+":"+port, timeout)
 
 	return r.Supported, err
 }

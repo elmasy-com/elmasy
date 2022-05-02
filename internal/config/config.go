@@ -34,6 +34,11 @@ func ParseConfig(path string) error {
 		return err
 	}
 
+	// Default URL
+	if GlobalConfig.URL == "" {
+		GlobalConfig.URL = "https://elmasy.com"
+	}
+
 	if GlobalConfig.Verbose {
 		fmt.Printf("Config:\n%#v\n\n", GlobalConfig)
 	}

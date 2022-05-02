@@ -108,9 +108,9 @@ func isIPBlacklisted(ip string) bool {
 		panic("Failed to parse IP in isIPBlacklisted(): " + ip)
 	}
 
-	for i := range config.GlobalConfig.BlacklistedNets {
+	for i := range config.GlobalConfig.BlacklistedNetworks {
 
-		if config.GlobalConfig.BlacklistedNets[i].Contains(p) {
+		if config.GlobalConfig.BlacklistedNetworks[i].Contains(p) {
 			return true
 		}
 	}

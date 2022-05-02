@@ -9,11 +9,12 @@ import (
 )
 
 type Config struct {
-	Verbose         bool     `yaml:"Verbose"`
-	ListenAddr      string   `yaml:"ListenAddr"`
-	TrustedProxies  []string `yaml:"TrustedProxies"`
-	BlackListedIPs  []string `yaml:"BlackListedIPs"`
-	BlacklistedNets []net.IPNet
+	Verbose             bool     `yaml:"Verbose"`
+	URL                 string   `yaml:"URL"`
+	ListenAddr          string   `yaml:"ListenAddr"`
+	TrustedProxies      []string `yaml:"TrustedProxies"`
+	BlackListedNetsStr  []string `yaml:"BlackListedNetworks"`
+	BlacklistedNetworks []net.IPNet
 }
 
 var GlobalConfig Config
@@ -42,13 +43,13 @@ func ParseConfig(path string) error {
 
 func (c *Config) convertBlackListedIPs() error {
 
-	for i := range c.BlackListedIPs {
+	for i := range c.BlackListedNetsStr {
 
-		_, net, err := net.ParseCIDR(c.BlackListedIPs[i])
+		_, net, err := net.ParseCIDR(c.BlackListedNetsStr[i])
 		if err != nil {
 			return err
 		}
-		c.BlacklistedNets = append(c.BlacklistedNets, *net)
+		c.BlacklistedNetworks = append(c.BlacklistedNetworks, *net)
 	}
 
 	return nil

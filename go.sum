@@ -8,8 +8,6 @@ github.com/elmasy-com/identify v0.0.0-20220408164304-c656c8f124b6 h1:rGhNEv/woiV
 github.com/elmasy-com/identify v0.0.0-20220408164304-c656c8f124b6/go.mod h1:RNwFDjyTfqXDvasuNI/PM4s4M7mmH7SsZfMxUDLQkC4=
 github.com/elmasy-com/portscan v0.2.1 h1:fGlvRUWy9VQtZKdKK40fga2SS8/Bm0Jk9U1H8GO8yUk=
 github.com/elmasy-com/portscan v0.2.1/go.mod h1:nwgaaA5+jayBOxC/jelwTnGLMDifhX4J4jjkLR0xfyc=
-github.com/elmasy-com/protocols v0.0.0-20220428143431-8bab8abffa66 h1:6qPTTDdjLCU6ZeIRa/lm6BxUm1sX1izRbibgxHMxzWc=
-github.com/elmasy-com/protocols v0.0.0-20220428143431-8bab8abffa66/go.mod h1:G3d/X/901HiOFJfCP6hw3WLmozJkrnRz1ZPU828B21Q=
 github.com/elmasy-com/slices v0.0.0-20220420084118-01ac765fdcea h1:CuJ/8JdIKTAU0p/1ArsXhSafAvA9Fa7BFYl+XwMNzQo=
 github.com/elmasy-com/slices v0.0.0-20220420084118-01ac765fdcea/go.mod h1:0DO/qXOgrnrXU44i+9JQzusxxxx6WPPW7WQeV/RJLLM=
 github.com/gin-contrib/sse v0.1.0 h1:Y/yl/+YNO8GZSjAhjMsSuLt29uWRFHdHYUb5lYOV9qE=

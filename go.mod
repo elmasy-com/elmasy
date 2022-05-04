@@ -6,7 +6,6 @@ require (
 	github.com/elmasy-com/bytebuilder v0.4.3
 	github.com/elmasy-com/identify v0.0.0-20220408164304-c656c8f124b6
 	github.com/elmasy-com/portscan v0.2.1
-	github.com/elmasy-com/protocols v0.0.0-20220428143431-8bab8abffa66
 	github.com/elmasy-com/slices v0.0.0-20220420084118-01ac765fdcea
 	github.com/gin-contrib/static v0.0.1
 	github.com/gin-gonic/gin v1.7.7

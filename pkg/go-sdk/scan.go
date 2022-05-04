@@ -58,3 +58,18 @@ func PortScan(technique, ip, ports string) ([]Ports, []error) {
 		return nil, []error{fmt.Errorf("unknown status: %s", resp.Status)}
 	}
 }
+
+func IsPortOpen(technique, ip, port string) (bool, error) {
+
+	ports, errs := PortScan(technique, ip, port)
+	if errs != nil {
+
+		return false, fmt.Errorf("%v", errs)
+	}
+
+	if len(ports) != 1 {
+		return false, fmt.Errorf("multiple ports: %v", ports)
+	}
+
+	return ports[0].State == "open", nil
+}

@@ -16,9 +16,10 @@ const (
 )
 
 type CipherSuite struct {
-	Value   []byte
-	Name    string
-	version []uint16
+	Value    []byte
+	Name     string
+	version  []uint16
+	Security string
 }
 
 // Get returns the known ciphers for version, or nil if the version is invalid.

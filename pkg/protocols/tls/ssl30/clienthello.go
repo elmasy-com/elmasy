@@ -2,7 +2,7 @@ package ssl30
 
 import (
 	"github.com/elmasy-com/bytebuilder"
-	"github.com/elmasy-com/protocols/tls/ciphersuite"
+	"github.com/elmasy-com/elmasy/pkg/protocols/tls/ciphersuite"
 )
 
 /*

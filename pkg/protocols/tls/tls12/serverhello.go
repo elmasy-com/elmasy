@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/elmasy-com/bytebuilder"
-	"github.com/elmasy-com/protocols/tls/ciphersuite"
+	"github.com/elmasy-com/elmasy/pkg/protocols/tls/ciphersuite"
 )
 
 /*

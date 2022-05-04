@@ -1,6 +1,6 @@
 package tls12
 
-import "github.com/elmasy-com/protocols/tls/ciphersuite"
+import "github.com/elmasy-com/elmasy/pkg/protocols/tls/ciphersuite"
 
 // Shorthand to create a Closure Alert
 func createClosureAlert() []byte {

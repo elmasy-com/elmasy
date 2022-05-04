@@ -199,7 +199,7 @@ paths:
       parameters:
         - name: protocol
           description: > 
-            Protocol to probe. Currently supported: `dns`, `ssl30`, `tls10`, tls11` and`tls12`.
+            Protocol to probe. Currently supported: `dns`, `ssl30`, `tls10`, `tls11` and `tls12`.
           in: query
           required: true
           schema:
@@ -238,6 +238,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        403:
+          description: Target port is closed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Target domain not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         500:
           description: An error occured while scanning.
           content:
@@ -245,6 +257,65 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /scan:
+    get:
+      summary: Scan target.
+      description: >
+        Scan the given target. Currently, only IPv4 targets are supported.
+      tags:
+        - Scan
+      parameters:
+        - name: target
+          description: Target hostname or IP.
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: port
+          description: The target port. Defaults to `443`.
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    target:
+                      type: string
+                    tls:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          version:
+                            type: string
+                          supported:
+                            type: boolean
+                          ciphers:
+                            type: array
+                            items:
+                              type: string
+        400:
+          description: Invalid target or port.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+          
   /scan/port:
     get:
       summary: Port scan

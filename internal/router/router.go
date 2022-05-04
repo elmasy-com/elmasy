@@ -10,6 +10,7 @@ import (
 	"github.com/elmasy-com/elmasy/internal/api/protocol/tls"
 	randomip "github.com/elmasy-com/elmasy/internal/api/random/ip"
 	randomport "github.com/elmasy-com/elmasy/internal/api/random/port"
+	"github.com/elmasy-com/elmasy/internal/api/scan"
 	"github.com/elmasy-com/elmasy/internal/api/scan/port"
 	"github.com/elmasy-com/elmasy/internal/config"
 
@@ -59,6 +60,7 @@ func SetupRouter() *gin.Engine {
 		api.GET("/protocol/dns/:type/:name", dns.Get)
 		api.GET("/protocol/tls", tls.Get)
 		api.GET("/protocol/probe", probe.Get)
+		api.GET("/scan", scan.Get)
 		api.GET("/scan/port", port.Get)
 	}
 

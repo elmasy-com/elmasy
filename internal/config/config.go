@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"strings"
 
+	"github.com/elmasy-com/elmasy/pkg/go-sdk"
 	"gopkg.in/yaml.v2"
 )
 
@@ -37,7 +39,10 @@ func ParseConfig(path string) error {
 	// Default URL
 	if GlobalConfig.URL == "" {
 		GlobalConfig.URL = "https://elmasy.com"
+	} else {
+		GlobalConfig.URL = strings.TrimRight(GlobalConfig.URL, "/")
 	}
+	sdk.API_PATH = GlobalConfig.URL + "/api"
 
 	if GlobalConfig.Verbose {
 		fmt.Printf("Config:\n%#v\n\n", GlobalConfig)

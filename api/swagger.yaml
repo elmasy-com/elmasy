@@ -277,6 +277,12 @@ paths:
           required: false
           schema:
             type: string
+        - name: network
+          description: The target network. Defaults to `tcp`.
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         200:
           description: Success.

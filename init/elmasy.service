@@ -3,7 +3,7 @@ Description=Elmasy server
 
 [Service]
 Type=simple
-User=root
+User=elmasy
 WorkingDirectory=/opt/elmasy
 ExecStart=/opt/elmasy/elmasy
 

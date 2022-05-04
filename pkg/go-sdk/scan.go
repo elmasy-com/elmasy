@@ -63,7 +63,6 @@ func IsPortOpen(technique, ip, port string) (bool, error) {
 
 	ports, errs := PortScan(technique, ip, port)
 	if errs != nil {
-
 		return false, fmt.Errorf("%v", errs)
 	}
 

@@ -68,6 +68,6 @@ func Get(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"result": supported})
+	c.JSON(http.StatusOK, gin.H{"result": fmt.Sprintf("%v", supported)})
 
 }

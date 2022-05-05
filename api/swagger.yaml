@@ -35,7 +35,7 @@ paths:
                 type: string
             application/json:
               schema:
-                $ref: "#/components/schemas/ResultString"       
+                $ref: "#/components/schemas/Result"       
 
   /random/ip/{version}:
     get:
@@ -56,7 +56,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResultString"
+                $ref: "#/components/schemas/Result"
         400:
           description: Invalid IP protocol version.
           content:
@@ -76,7 +76,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResultString"
+                $ref: "#/components/schemas/Result"
             "*/*":
               schema:
                 type: string
@@ -107,7 +107,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResultArrayString"
+                $ref: "#/components/schemas/Results"
         400:
           description: Invalid type or domain.
           content:
@@ -168,14 +168,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  supported:
-                    type: boolean
-                  ciphers:
-                    type: array
-                    items:
-                      type: string
+                $ref: "#/components/schemas/TLS"
         400:
           description: Bad request
           content:
@@ -228,24 +221,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    type: boolean
+                $ref: "#/components/schemas/Result"
         400:
           description: Bad request.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        403:
-          description: Target port is closed.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        404:
-          description: Target domain not found.
           content:
             application/json:
               schema:
@@ -289,25 +267,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    target:
-                      type: string
-                    tls:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          version:
-                            type: string
-                          supported:
-                            type: boolean
-                          ciphers:
-                            type: array
-                            items:
-                              type: string
+                $ref: "#components/schemas/Scan"
         400:
           description: Invalid target or port.
           content:
@@ -357,17 +317,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        port:
-                          type: string
-                        state:
-                          type: string
+                $ref: "#/components/schemas/Ports"
         400:
           description: Invalid or missing query parameter.
           content:
@@ -385,20 +335,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorArray"
+                $ref: "#/components/schemas/Errors"
 
 
 
 components:
-  
+
   schemas:
-    ResultString:
+
+    Result:
       type: object
       properties:
         result:
           type: string
       
-    ResultArrayString:
+    Results:
       type: object
       properties:
         results:
@@ -412,10 +363,47 @@ components:
         error:
           type: string
     
-    ErrorArray:
+    Errors:
       type: object
       properties:
         errors:
           type: array
           items:
             type: string
+    TLS:
+      type: object
+      properties:
+        version:
+          type: string
+        supported:
+          type: boolean
+        ciphers:
+          type: array
+          items:
+            type: string
+    Target:
+      type: object
+      properties:
+        target:
+          type: string
+        tls:
+          type: array
+          items:
+            $ref: "#/components/schemas/TLS"
+    Scan:
+      type: array
+      items:
+        $ref: "#/components/schemas/Target"
+    Port:
+      type: object
+      properties:
+        port:
+          type: string
+        state:
+          type: string
+    Ports:
+      type: array
+      items:
+        $ref: "#/components/schemas/Port"
+
+        

@@ -119,5 +119,5 @@ func Get(c *gin.Context) {
 
 	}
 
-	c.JSON(http.StatusOK, gin.H{"result": result.Result})
+	c.JSON(http.StatusOK, result.Result)
 }

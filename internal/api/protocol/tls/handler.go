@@ -52,7 +52,7 @@ func Get(c *gin.Context) {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"supported": r.Supported, "ciphers": slices.Strings(r.Ciphers)})
+		c.JSON(http.StatusOK, gin.H{"version:": "ssl30", "supported": r.Supported, "ciphers": slices.Strings(r.Ciphers)})
 
 	case "tls10":
 		r, serr := tls10.Scan(network, ip+":"+port, 2*time.Second)
@@ -63,7 +63,7 @@ func Get(c *gin.Context) {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"supported": r.Supported, "ciphers": slices.Strings(r.Ciphers)})
+		c.JSON(http.StatusOK, gin.H{"version:": "tls10", "supported": r.Supported, "ciphers": slices.Strings(r.Ciphers)})
 
 	case "tls11":
 		r, serr := tls11.Scan(network, ip+":"+port, 2*time.Second)
@@ -74,7 +74,7 @@ func Get(c *gin.Context) {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"supported": r.Supported, "ciphers": slices.Strings(r.Ciphers)})
+		c.JSON(http.StatusOK, gin.H{"version:": "tls11", "supported": r.Supported, "ciphers": slices.Strings(r.Ciphers)})
 
 	case "tls12":
 		r, serr := tls12.Scan(network, ip+":"+port, 2*time.Second)
@@ -85,7 +85,7 @@ func Get(c *gin.Context) {
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"supported": r.Supported, "ciphers": slices.Strings(r.Ciphers)})
+		c.JSON(http.StatusOK, gin.H{"version:": "tls12", "supported": r.Supported, "ciphers": slices.Strings(r.Ciphers)})
 
 	default:
 		err := fmt.Errorf("Invalid version: %s", version)

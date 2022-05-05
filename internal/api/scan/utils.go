@@ -64,6 +64,7 @@ func scanTLS(t chan<- TLS, twg *sync.WaitGroup, version, network, ip, port strin
 	tls, err := sdk.AnalyzeTLS(version, network, ip, port)
 	if err != nil {
 		t <- TLS{Error: err}
+		return
 	}
 
 	t <- TLS{Version: version, Supported: tls.Supported, Ciphers: tls.Ciphers}

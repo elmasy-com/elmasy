@@ -34,7 +34,7 @@ func sendClientHello(conn *net.Conn, timeout time.Duration, ciphers []ciphersuit
 	if num, err := (*conn).Write(hello); err != nil {
 		return fmt.Errorf("failed to write: %s", err)
 	} else if num != len(hello) {
-		return fmt.Errorf("fewer bytes writen: want(%d) / actual(%d)", len(hello), num)
+		return fmt.Errorf("fewer bytes written: want(%d) / actual(%d)", len(hello), num)
 	}
 
 	return nil
@@ -79,7 +79,7 @@ func sendClosureALert(conn *net.Conn, timeout time.Duration) error {
 	if num, err := (*conn).Write(close); err != nil {
 		return fmt.Errorf("failed to write: %s", err)
 	} else if num != len(close) {
-		return fmt.Errorf("fewer bytes writen: want(%d) / actual(%d)", len(close), num)
+		return fmt.Errorf("fewer bytes written: want(%d) / actual(%d)", len(close), num)
 	}
 
 	return nil

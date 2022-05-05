@@ -22,7 +22,7 @@ fi
 OUTPUT=$(wget "https://github.com/elmasy-com/elmasy/raw/main/build/elmasy.tar" 2>&1)
 if [ $? != 0 ]
 then
-    echo "Failed to donwload elmasy.tar!"
+    echo "Failed to download elmasy.tar!"
     echo "$OUTPUT"
     exit 1
 fi

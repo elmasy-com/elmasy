@@ -55,15 +55,23 @@ func TestPortScan(t *testing.T) {
 
 	r, errs := PortScan("stealth", "95.216.184.245", "80,443")
 	if errs != nil {
-		t.Fatalf("%v", errs)
+		t.Fatalf("FAIL: %v", errs)
+	}
+
+	t.Logf("%v", r)
+}
+
+func TestProbe(t *testing.T) {
+
+	r, err := Probe("tls12", "tcp", "95.216.184.245", "443")
+	if err != nil {
+		t.Fatalf("FAIL: %s", err)
 	}
 
 	t.Logf("%v", r)
 }
 
 func TestScan(t *testing.T) {
-
-	API_PATH = "http://localhost:8080/api"
 
 	r, err := Scan("elmasy.com", "443", "tcp")
 	if err != nil {

@@ -60,3 +60,15 @@ func TestPortScan(t *testing.T) {
 
 	t.Logf("%v", r)
 }
+
+func TestScan(t *testing.T) {
+
+	API_PATH = "http://localhost:8080/api"
+
+	r, err := Scan("elmasy.com", "443", "tcp")
+	if err != nil {
+		t.Fatalf("FAIL: %s", err)
+	}
+
+	t.Logf("%#v", r)
+}

@@ -3,25 +3,18 @@ package sdk
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 )
 
 func DNSLookup(t, n string) ([]string, error) {
 
 	url := fmt.Sprintf("/protocol/dns/%s/%s", t, n)
 
-	resp, err := Get(url)
+	body, status, err := Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query: %s", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read body: %s", err)
+		return nil, err
 	}
 
-	switch resp.StatusCode {
+	switch status {
 	case 200:
 		r := Results{}
 
@@ -39,7 +32,7 @@ func DNSLookup(t, n string) ([]string, error) {
 
 		return nil, e
 	default:
-		return nil, fmt.Errorf("unknown status: %s", resp.Status)
+		return nil, fmt.Errorf("unknown status: %d", status)
 	}
 }
 
@@ -47,18 +40,12 @@ func AnalyzeTLS(version, network, ip, port string) (TLS, error) {
 
 	url := fmt.Sprintf("/protocol/tls?version=%s&network=%s&ip=%s&port=%s", version, network, ip, port)
 
-	resp, err := Get(url)
+	body, status, err := Get(url)
 	if err != nil {
-		return TLS{}, fmt.Errorf("failed to query: %s", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return TLS{}, fmt.Errorf("failed to read body: %s", err)
+		return TLS{}, err
 	}
 
-	switch resp.StatusCode {
+	switch status {
 	case 200:
 		r := TLS{}
 
@@ -76,7 +63,7 @@ func AnalyzeTLS(version, network, ip, port string) (TLS, error) {
 
 		return TLS{}, e
 	default:
-		return TLS{}, fmt.Errorf("unknown status: %s", resp.Status)
+		return TLS{}, fmt.Errorf("unknown status: %d", status)
 	}
 }
 
@@ -84,26 +71,20 @@ func Probe(protocol, network, ip, port string) (bool, error) {
 
 	url := fmt.Sprintf("/protocol/probe?protocol=%s&network=%s&ip=%s&port=%s", protocol, network, ip, port)
 
-	resp, err := Get(url)
+	body, status, err := Get(url)
 	if err != nil {
-		return false, fmt.Errorf("failed to query: %s", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return false, fmt.Errorf("failed to read body: %s", err)
+		return false, err
 	}
 
-	switch resp.StatusCode {
+	switch status {
 	case 200:
-		r := ResultBool{}
+		r := Result{}
 
 		if err = json.Unmarshal(body, &r); err != nil {
 			return false, fmt.Errorf("failed to unmarshal: %s", err)
 		}
 
-		return r.Result, nil
+		return r.Result == "true", nil
 	case 400, 500:
 		e := Error{}
 
@@ -113,6 +94,6 @@ func Probe(protocol, network, ip, port string) (bool, error) {
 
 		return false, e
 	default:
-		return false, fmt.Errorf("unknown status: %s", resp.Status)
+		return false, fmt.Errorf("unknown status: %d", status)
 	}
 }

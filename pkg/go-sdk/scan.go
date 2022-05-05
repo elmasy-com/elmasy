@@ -3,35 +3,57 @@ package sdk
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 )
 
-func PortScan(technique, ip, ports string) ([]Ports, []error) {
+func Scan(target, port, network string) ([]Target, error) {
+
+	url := fmt.Sprintf("/scan?target=%s&port=%s&network=%s", target, port, network)
+
+	body, status, err := Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	switch status {
+	case 200:
+		var r []Target
+
+		if err := json.Unmarshal(body, &r); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal: %s", err)
+		}
+
+		return r, nil
+	case 400, 500:
+		e := Error{}
+
+		if err := json.Unmarshal(body, &e); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal: %s", err)
+		}
+		return nil, e
+	default:
+		return nil, fmt.Errorf("unknown status: %d", status)
+	}
+
+}
+
+func PortScan(technique, ip, ports string) (Ports, []error) {
 
 	url := fmt.Sprintf("/scan/port?technique=%s&ip=%s&ports=%s", technique, ip, ports)
 
-	resp, err := Get(url)
+	body, status, err := Get(url)
 	if err != nil {
-		return nil, []error{fmt.Errorf("failed to query: %s", err)}
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, []error{fmt.Errorf("failed to read body: %s", err)}
+		return nil, []error{err}
 	}
 
-	switch resp.StatusCode {
+	switch status {
 	case 200:
-		r := struct {
-			Result []Ports `json:"result"`
-		}{}
+		var r Ports
 
 		if err := json.Unmarshal(body, &r); err != nil {
 			return nil, []error{fmt.Errorf("failed to unmarshal: %s", err)}
 		}
 
-		return r.Result, nil
+		return r, nil
 	case 400, 403:
 		e := Error{}
 
@@ -55,7 +77,7 @@ func PortScan(technique, ip, ports string) ([]Ports, []error) {
 
 		return nil, errs
 	default:
-		return nil, []error{fmt.Errorf("unknown status: %s", resp.Status)}
+		return nil, []error{fmt.Errorf("unknown status: %d", status)}
 	}
 }
 

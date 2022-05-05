@@ -103,15 +103,17 @@ func Get(c *gin.Context) {
 	for t := range targets {
 		if t.Error != nil {
 
+			code := 0
+
 			if errors.Is(t.Error, ErrPortClosed) {
-				c.Error(t.Error)
-				c.JSON(http.StatusForbidden, gin.H{"error": t.Error.Error()})
-				return
+				code = http.StatusForbidden
+			} else {
+				code = http.StatusInternalServerError
 			}
 
 			err = fmt.Errorf("failed to check %s: %s", t.Target, t.Error)
 			c.Error(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(code, gin.H{"error": err.Error()})
 			return
 		}
 

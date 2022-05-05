@@ -47,7 +47,8 @@ func scanTarget(c chan<- Target, wg *sync.WaitGroup, network, ip, port string) {
 	close(tlsResults)
 
 	for i := range tlsResults {
-		if t.Error != nil {
+		if i.Error != nil {
+			fmt.Printf("ERROR OCCURED IN scanTarget() tlsResults: %s\n", i.Error)
 			t.Error = i.Error
 			c <- t
 			return
@@ -62,10 +63,11 @@ func scanTLS(t chan<- TLS, twg *sync.WaitGroup, version, network, ip, port strin
 	defer twg.Done()
 
 	tls, err := sdk.AnalyzeTLS(version, network, ip, port)
+
 	if err != nil {
-		t <- TLS{Error: err}
-		return
+		fmt.Printf("--------------------------> ERROR OCCURED IN scanTLS(): %s\n", err)
+
 	}
 
-	t <- TLS{Version: version, Supported: tls.Supported, Ciphers: tls.Ciphers}
+	t <- TLS{Version: version, Supported: tls.Supported, Ciphers: tls.Ciphers, Error: err}
 }

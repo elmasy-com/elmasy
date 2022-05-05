@@ -23,7 +23,7 @@ func Scan(target, port, network string) ([]Target, error) {
 		}
 
 		return r, nil
-	case 400, 500:
+	case 400, 403, 500:
 		e := Error{}
 
 		if err := json.Unmarshal(body, &e); err != nil {

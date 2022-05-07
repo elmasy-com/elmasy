@@ -15,7 +15,7 @@ fi
 if [ $(id -u elmasy > /dev/null 2>&1; echo $?) != 0 ]
 then
     echo "Creating elmasy user..."
-    adduser --system --no-create-home --gecos "" --disabled-login elmasy
+    adduser --no-create-home --gecos "" --disabled-login elmasy
 fi
 
 

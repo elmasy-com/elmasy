@@ -4,6 +4,7 @@ Description=Elmasy server
 [Service]
 Type=simple
 User=elmasy
+Group=elmasy
 WorkingDirectory=/opt/elmasy
 ExecStart=/opt/elmasy/elmasy
 

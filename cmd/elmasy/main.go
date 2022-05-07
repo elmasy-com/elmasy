@@ -21,7 +21,14 @@ func main() {
 
 	r := router.SetupRouter()
 
-	if err := r.Run(config.GlobalConfig.ListenAddr); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to run server: %s\n", err)
+	if config.GlobalConfig.SSLCertificate == "" || config.GlobalConfig.SSLKey == "" {
+		if err := r.Run(config.GlobalConfig.Listen); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to run server: %s\n", err)
+		}
+	} else {
+		err := r.RunTLS(config.GlobalConfig.Listen, config.GlobalConfig.SSLCertificate, config.GlobalConfig.SSLKey)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to run server: %s\n", err)
+		}
 	}
 }

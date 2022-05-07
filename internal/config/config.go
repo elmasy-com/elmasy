@@ -10,12 +10,19 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type TLS struct {
+	Cert string
+	Key  string
+}
+
 type Config struct {
-	Verbose             bool     `yaml:"Verbose"`
-	URL                 string   `yaml:"URL"`
-	ListenAddr          string   `yaml:"ListenAddr"`
-	TrustedProxies      []string `yaml:"TrustedProxies"`
-	BlackListedNetsStr  []string `yaml:"BlackListedNetworks"`
+	Verbose             bool     `yaml:"verbose"`
+	URL                 string   `yaml:"url"`
+	Listen              string   `yaml:"listen"`
+	TrustedProxies      []string `yaml:"trusted_proxies"`
+	BlackListedNetsStr  []string `yaml:"blacklisted_networks"`
+	SSLCertificate      string   `yaml:"ssl_certificate"`
+	SSLKey              string   `yaml:"ssl_certificate_key"`
 	BlacklistedNetworks []net.IPNet
 }
 

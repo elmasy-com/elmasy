@@ -291,7 +291,7 @@ paths:
   /scan/port:
     get:
       summary: Port scan
-      description: Port scanner API. Scan up to 100 ports.
+      description: Port scanner API.
       tags:
         - Scan
       parameters:

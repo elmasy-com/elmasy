@@ -20,14 +20,14 @@ func scanTarget(c chan<- Target, wg *sync.WaitGroup, network, ip, port string) {
 	t.Target = ip
 
 	if network == "tcp" {
-		open, err := sdk.IsPortOpen("connect", ip, port)
+		state, err := sdk.PortScan("connect", ip, port, "2")
 		if err != nil {
 			t.Error = fmt.Errorf("failed to scan %s:%s: %s", ip, port, err)
 			c <- t
 			return
 		}
 
-		if !open {
+		if state != "open" {
 			t.Error = ErrPortClosed
 			c <- t
 			return

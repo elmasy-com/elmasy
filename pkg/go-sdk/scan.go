@@ -36,61 +36,41 @@ func Scan(target, port, network string) ([]Target, error) {
 
 }
 
-func PortScan(technique, ip, ports string) (Ports, []error) {
+func PortScan(technique, ip, ports, timeout string) (string, error) {
 
-	url := fmt.Sprintf("/scan/port?technique=%s&ip=%s&ports=%s", technique, ip, ports)
+	url := fmt.Sprintf("/scan/port?technique=%s&ip=%s&port=%s&timeout=%s", technique, ip, ports, timeout)
 
 	body, status, err := Get(url)
 	if err != nil {
-		return nil, []error{err}
+		return "", err
 	}
 
 	switch status {
 	case 200:
-		var r Ports
+		var r Result
 
 		if err := json.Unmarshal(body, &r); err != nil {
-			return nil, []error{fmt.Errorf("failed to unmarshal: %s", err)}
+			return "", fmt.Errorf("failed to unmarshal: %s", err)
 		}
 
-		return r, nil
+		return r.Result, nil
 	case 400, 403:
 		e := Error{}
 
 		if err := json.Unmarshal(body, &e); err != nil {
-			return nil, []error{fmt.Errorf("failed to unmarshal: %s", err)}
+			return "", fmt.Errorf("failed to unmarshal: %s", err)
 		}
 
-		return nil, []error{e}
+		return "", e
 	case 500:
-		e := Errors{}
+		e := Error{}
 
 		if err := json.Unmarshal(body, &e); err != nil {
-			return nil, []error{fmt.Errorf("failed to unmarshal: %s", err)}
+			return "", fmt.Errorf("failed to unmarshal: %s", err)
 		}
 
-		errs := make([]error, 0)
-
-		for i := range e.Errors {
-			errs = append(errs, fmt.Errorf(e.Errors[i]))
-		}
-
-		return nil, errs
+		return "", e
 	default:
-		return nil, []error{fmt.Errorf("unknown status: %d", status)}
+		return "", fmt.Errorf("unknown status: %d", status)
 	}
-}
-
-func IsPortOpen(technique, ip, port string) (bool, error) {
-
-	ports, errs := PortScan(technique, ip, port)
-	if errs != nil {
-		return false, fmt.Errorf("%v", errs)
-	}
-
-	if len(ports) != 1 {
-		return false, fmt.Errorf("multiple ports: %v", ports)
-	}
-
-	return ports[0].State == "open", nil
 }

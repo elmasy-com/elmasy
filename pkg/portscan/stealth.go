@@ -30,9 +30,7 @@ type stealthOpts struct {
 	m         sync.Mutex
 }
 
-// NewStealthOpts returns a StealthOpts struct.
-
-// timeout is the global timeout. Read more at GetReadTimeout().
+// newStealthOpts returns a StealthOpts struct.
 func newStealthOpts(ip string, ports []int, timeout time.Duration) (*stealthOpts, error) {
 
 	var (
@@ -275,12 +273,9 @@ func synScan(scan *stealthOpts) (Result, []error) {
 	return scan.result, errs
 }
 
+// StealthScan uses syn scan method to scan ports.
 // ip must be a valid IPv4/IPv6 address, not a domain.
 // StealthScan retries the FILTERED ports for once again.
-// StealthScan has two timeout:
-// One is the global timeout, which is set to stop reading packets after X time.
-// Second is the read timeout, which is set to terminate reading from socket after X time, if no packe read.
-// Read timeout is useful if (for example) the global timeout is 10 sec, but no packet arrive after 2 sec, so you dont have to wait for the remaining 8 sec.
 func StealthScan(ip string, ports []int, timeout time.Duration) (Result, []error) {
 
 	result := make(Result, 0)

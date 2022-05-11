@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/elmasy-com/portscan"
+	"github.com/elmasy-com/elmasy/pkg/portscan"
 )
 
 /*
@@ -25,7 +25,7 @@ func main() {
 
 	t := time.Now()
 
-	r, err := portscan.StealthScan(ip, ports, 3*time.Second, 500*time.Millisecond)
+	r, err := portscan.StealthScan(ip, ports, 1*time.Second)
 	if err != nil {
 		fmt.Printf("error: %s\n", err)
 	}

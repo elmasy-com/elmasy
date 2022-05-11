@@ -18,8 +18,7 @@ import (
 
 type stealthOpts struct {
 	network   string                // Must be "ip4:tcp" or "ip6:tcp"
-	gtimeout  time.Time             // Stop scanning after this time
-	rtimeout  time.Duration         // Read timeout
+	timeout   time.Duration         // Read timeout
 	result    Result                //
 	raddr     *net.IPAddr           // Remote address
 	dconn     *net.IPConn           // Connection to send packets
@@ -28,12 +27,13 @@ type stealthOpts struct {
 	lconn     *net.IPConn           // COnnection to read pakcets
 	nlayer    gopacket.NetworkLayer // Network layer used to create tcp packet
 	fldecoder gopacket.Decoder      // First layer decoder used in read
+	m         sync.Mutex
 }
 
 // NewStealthOpts returns a StealthOpts struct.
 
 // timeout is the global timeout. Read more at GetReadTimeout().
-func newStealthOpts(ip string, ports []int, global, read time.Duration) (stealthOpts, error) {
+func newStealthOpts(ip string, ports []int, timeout time.Duration) (*stealthOpts, error) {
 
 	var (
 		scan stealthOpts
@@ -43,27 +43,23 @@ func newStealthOpts(ip string, ports []int, global, read time.Duration) (stealth
 	// Check valid IPv4/IPv6 address and set network
 	switch i := net.ParseIP(ip); true {
 	case i == nil:
-		return scan, fmt.Errorf("invalid IP address: %s", ip)
+		return &scan, fmt.Errorf("invalid IP address: %s", ip)
 	case i.To4() != nil:
 		scan.network = "ip4:tcp"
 	case i.To16() != nil:
 		scan.network = "ip6:tcp"
 	default:
-		return scan, fmt.Errorf("unparsable IP address: %s", ip)
+		return &scan, fmt.Errorf("unparsable IP address: %s", ip)
 
 	}
 
-	// Set global timeout
-	scan.gtimeout = time.Now().Add(global)
-
-	// Set read timeout
-	scan.rtimeout = read
+	scan.timeout = timeout
 
 	// Set result
 	for i := range ports {
 
 		if ports[i] < 1 || ports[i] > 65535 {
-			return scan, fmt.Errorf("invalid port: %d\n", ports[i])
+			return &scan, fmt.Errorf("invalid port: %d\n", ports[i])
 		}
 
 		scan.result = append(scan.result, Port{Port: ports[i], State: FILTERED})
@@ -71,19 +67,19 @@ func newStealthOpts(ip string, ports []int, global, read time.Duration) (stealth
 
 	// Set raddr
 	if scan.raddr, err = net.ResolveIPAddr(scan.network, ip); err != nil {
-		return scan, fmt.Errorf("failed to resolve remote address: %s", err)
+		return &scan, fmt.Errorf("failed to resolve remote address: %s", err)
 	}
 
 	// Set dconn
 	scan.dconn, err = net.DialIP(scan.network, nil, scan.raddr)
 	if err != nil {
-		return scan, fmt.Errorf("failed to dial: %s", err)
+		return &scan, fmt.Errorf("failed to dial: %s", err)
 	}
 
 	// Set laddr
 	if scan.laddr, err = net.ResolveIPAddr(scan.network, scan.dconn.LocalAddr().String()); err != nil {
 		scan.dconn.Close()
-		return scan, fmt.Errorf("failed to resolve local address: %s", err)
+		return &scan, fmt.Errorf("failed to resolve local address: %s", err)
 	}
 
 	// Set lport
@@ -94,7 +90,15 @@ func newStealthOpts(ip string, ports []int, global, read time.Duration) (stealth
 	scan.lconn, err = net.ListenIP(scan.network, scan.laddr)
 	if err != nil {
 		scan.dconn.Close()
-		return scan, fmt.Errorf("failed to listen: %s", err)
+		return &scan, fmt.Errorf("failed to listen: %s", err)
+	}
+
+	// Set read initial read timeout.
+	// The timeout will be updated after every packet from the target.
+	if err = scan.lconn.SetDeadline(time.Now().Add(scan.timeout)); err != nil {
+		scan.dconn.Close()
+		scan.lconn.Close()
+		return &scan, fmt.Errorf("failed to set initial deadline: %s", err)
 	}
 
 	// Set nlayer
@@ -109,7 +113,7 @@ func newStealthOpts(ip string, ports []int, global, read time.Duration) (stealth
 	// IPv4 raw socket read() returns the IP header, but Go's ReadFromIP() returns only the TCP header
 	scan.fldecoder = layers.LayerTypeTCP
 
-	return scan, nil
+	return &scan, nil
 }
 
 func (s *stealthOpts) close() {
@@ -121,6 +125,7 @@ func (s *stealthOpts) close() {
 func (s *stealthOpts) createPackets(c chan<- []byte, e chan<- error, wg *sync.WaitGroup) {
 
 	defer wg.Done()
+	defer close(c)
 
 	for i := range s.result {
 
@@ -150,14 +155,11 @@ func (s *stealthOpts) createPackets(c chan<- []byte, e chan<- error, wg *sync.Wa
 		}
 
 		c <- buf.Bytes()
-
 	}
-
-	close(c)
 }
 
 // Send TCP packets get from createPackets through c channel
-func (s *stealthOpts) send(c <-chan []byte, e chan<- error, wg *sync.WaitGroup) error {
+func (s *stealthOpts) send(c <-chan []byte, e chan<- error, wg *sync.WaitGroup) {
 
 	defer wg.Done()
 
@@ -167,32 +169,17 @@ func (s *stealthOpts) send(c <-chan []byte, e chan<- error, wg *sync.WaitGroup) 
 			e <- fmt.Errorf("failed to write: %s", err)
 		}
 	}
-
-	return nil
-}
-
-// Returns the read timeout if read timeout bigger than the remainder of global timeout.
-func (s *stealthOpts) getReadTimeout() time.Duration {
-	t := s.gtimeout.Sub(time.Now())
-	if t.Nanoseconds() > s.rtimeout.Nanoseconds() {
-		return s.rtimeout
-	} else {
-		return t
-	}
 }
 
 // Try to read the response, assemble the packet and send it into c.
 func (s *stealthOpts) read(c chan<- layers.TCP, e chan<- error, wg *sync.WaitGroup) {
 
 	defer wg.Done()
+	defer close(c)
 
 	for {
 
 		b := make([]byte, 256)
-
-		if err := s.lconn.SetDeadline(time.Now().Add(s.getReadTimeout())); err != nil {
-			e <- fmt.Errorf("failed to set deadline: %s", err)
-		}
 
 		n, raddr, err := s.lconn.ReadFromIP(b)
 		if err != nil {
@@ -223,10 +210,7 @@ func (s *stealthOpts) read(c chan<- layers.TCP, e chan<- error, wg *sync.WaitGro
 		}
 
 		c <- *tcp
-
 	}
-
-	close(c)
 }
 
 // Read TCP packets from channel c, and evalute the state based on the TCP flags.
@@ -257,10 +241,15 @@ func (s *stealthOpts) evaluate(c <-chan layers.TCP, e chan<- error, wg *sync.Wai
 			e <- fmt.Errorf("unknown TCP packet in evaluate(): %#v", t)
 		}
 
+		// Update the read deadline
+		s.m.Lock()
+		s.lconn.SetDeadline(time.Now().Add(s.timeout))
+		s.m.Unlock()
+
 	}
 }
 
-func synScan(scan stealthOpts) (Result, []error) {
+func synScan(scan *stealthOpts) (Result, []error) {
 
 	packets := make(chan []byte, len(scan.result))
 	tcps := make(chan layers.TCP, len(scan.result))
@@ -292,28 +281,27 @@ func synScan(scan stealthOpts) (Result, []error) {
 // One is the global timeout, which is set to stop reading packets after X time.
 // Second is the read timeout, which is set to terminate reading from socket after X time, if no packe read.
 // Read timeout is useful if (for example) the global timeout is 10 sec, but no packet arrive after 2 sec, so you dont have to wait for the remaining 8 sec.
-func StealthScan(ip string, ports []int, global, read time.Duration) (Result, []error) {
+func StealthScan(ip string, ports []int, timeout time.Duration) (Result, []error) {
 
 	result := make(Result, 0)
 
-	scan1, err := newStealthOpts(ip, ports, global, read)
+	scan1, err := newStealthOpts(ip, ports, timeout)
 	if err != nil {
 		return nil, []error{err}
 	}
 
 	scan1r, errs := synScan(scan1)
+	scan1.close()
 	if errs != nil {
-		scan1.close()
 		return nil, errs
 	}
-	scan1.close()
 
 	result = append(result, scan1r.GetPorts(OPEN)...)
 	result = append(result, scan1r.GetPorts(CLOSED)...)
 
 	// Scan filtered ports again, maybe a network error
 	if scan1r.Len(FILTERED) > 0 {
-		scan2, err := newStealthOpts(ip, scan1r.GetPortsInt(FILTERED), global, read)
+		scan2, err := newStealthOpts(ip, scan1r.GetPortsInt(FILTERED), timeout)
 		if err != nil {
 			return nil, []error{err}
 		}
@@ -327,6 +315,7 @@ func StealthScan(ip string, ports []int, global, read time.Duration) (Result, []
 		result = append(result, scan2r...)
 	}
 
+	// Sort result by port number
 	sort.Slice(result, func(i, j int) bool { return result[i].Port < result[j].Port })
 
 	return result, nil

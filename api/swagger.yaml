@@ -307,12 +307,16 @@ paths:
           required: true
           schema:
             type: string
-        - name: ports
-          description: >
-            A comma separated list of ports or a singe port without comma.
-            Example: `22,80,44`.
+        - name: port
+          description: The target port number.
           in: query
           required: true
+          schema:
+            type: string
+        - name: timeout
+          description: Scan timeout in second. Default to 2 seconds.
+          in: query
+          required: false
           schema:
             type: string
       responses:
@@ -323,7 +327,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Ports"
+                $ref: "#/components/schemas/Result"
         400:
           description: Invalid or missing query parameter.
           content:
@@ -341,7 +345,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Errors"
+                $ref: "#/components/schemas/Error"
 
 
 

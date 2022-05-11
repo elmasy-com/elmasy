@@ -5,10 +5,9 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-	"strings"
+	"time"
 
 	"github.com/elmasy-com/elmasy/internal/config"
-	"github.com/elmasy-com/elmasy/pkg/portscan"
 	"github.com/elmasy-com/identify"
 	"github.com/gin-gonic/gin"
 )
@@ -16,7 +15,8 @@ import (
 type Params struct {
 	Technique string
 	IP        string
-	Ports     []int
+	Timeout   time.Duration
+	Port      int
 }
 
 type PortString struct {
@@ -63,35 +63,26 @@ func parseQuery(c *gin.Context) (Params, error) {
 		return params, err
 	}
 
-	portsQuery := c.Query("ports")
-	if portsQuery == "" {
-		err := fmt.Errorf("ports is missing")
+	timeoutQuery := c.DefaultQuery("timeout", "2")
+	timeoutInt, err := strconv.Atoi(timeoutQuery)
+	if err != nil || timeoutInt < 0 {
+		err := fmt.Errorf("Invalid timeout: %s", timeoutQuery)
 		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return params, err
 	}
+	params.Timeout = time.Duration(timeoutInt) * time.Second
 
-	portsSlice := strings.Split(portsQuery, ",")
-	for i := range portsSlice {
-
-		p, err := strconv.Atoi(portsSlice[i])
-		if err != nil {
-			err := fmt.Errorf("Invalid port: \"%s\"", portsSlice[i])
-			c.Error(err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return params, err
-		}
-		if !identify.IsValidPort(p) {
-			err := fmt.Errorf("Invalid port: %d", p)
-			c.Error(err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return params, err
-		}
-		params.Ports = append(params.Ports, p)
+	portQuery := c.Query("port")
+	if portQuery == "" {
+		err := fmt.Errorf("port is missing")
+		c.Error(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return params, err
 	}
-
-	if len(params.Ports) > 100 {
-		err := fmt.Errorf("Too much port: %d", len(params.Ports))
+	params.Port, err = strconv.Atoi(portQuery)
+	if err != nil || !identify.IsValidPort(params.Port) {
+		err := fmt.Errorf("Invalid port: %s", portQuery)
 		c.Error(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return params, err
@@ -116,16 +107,4 @@ func isIPBlacklisted(ip string) bool {
 	}
 
 	return false
-}
-
-// Convert portscan.Port's int/int to string/string for better result of the API.
-func convertResultString(r portscan.Result) []PortString {
-
-	ps := make([]PortString, 0)
-
-	for i := range r {
-		ps = append(ps, PortString{Port: strconv.Itoa(r[i].Port), State: r[i].State.String()})
-	}
-
-	return ps
 }

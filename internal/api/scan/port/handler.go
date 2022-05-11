@@ -1,8 +1,8 @@
 package port
 
 import (
+	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/elmasy-com/elmasy/pkg/portscan"
 	"github.com/gin-gonic/gin"
@@ -21,20 +21,25 @@ func Get(c *gin.Context) {
 
 	switch params.Technique {
 	case "stealth", "syn":
-		result, errs = portscan.StealthScan(params.IP, params.Ports, 8*time.Second, 1*time.Second)
+		result, errs = portscan.StealthScan(params.IP, []int{params.Port}, params.Timeout)
 	case "connect":
-		result, errs = portscan.ConnectScan(params.IP, params.Ports, 2*time.Second)
+		result, errs = portscan.ConnectScan(params.IP, []int{params.Port}, params.Timeout)
 	}
 
 	if len(errs) > 0 {
-		errsStr := make([]string, 0)
+
 		for i := range errs {
 			c.Error(errs[i])
-			errsStr = append(errsStr, errs[i].Error())
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"errors": errsStr})
+
+		// Return only the first error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errs[0]})
 		return
 	}
 
-	c.JSON(http.StatusOK, convertResultString(result))
+	if len(result) != 1 {
+		c.Error(fmt.Errorf("Multiple result at single port: %#v", result))
+	}
+
+	c.JSON(http.StatusOK, gin.H{"result": result[0].State.String()})
 }

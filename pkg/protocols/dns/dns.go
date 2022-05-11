@@ -22,6 +22,7 @@ func init() {
 		panic("Failed to parse /etc/resolv.conf: " + err.Error())
 	}
 
+	rand.Seed(time.Now().UnixMicro())
 }
 
 // getServer used to randomize DNS servers.
@@ -30,8 +31,6 @@ func getServer() string {
 	if len(conf.Servers) == 1 {
 		return conf.Servers[0] + ":53"
 	}
-
-	rand.Seed(time.Now().UnixMicro())
 
 	return conf.Servers[rand.Intn(len(conf.Servers))] + ":53"
 }

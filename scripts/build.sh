@@ -86,7 +86,7 @@ elmasy-other() {
 
 	echo "Copying other files..."
 
-	cp configs/elmasy.conf build/elmasy/
+	cp configs/elmasy.conf build/elmasy/elmasy.conf.example
 	cp init/elmasy.service build/elmasy/
 }
 

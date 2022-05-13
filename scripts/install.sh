@@ -4,6 +4,11 @@
 # Install elmasy.tar on a Debian server
 ###
 
+if [ $EUID != "0" ]
+then
+    echo "RUN AS ROOT!"
+    exit 1
+fi
 
 # Remove leftover file, if error occured before
 if [ -e elmasy.tar ]
@@ -12,7 +17,7 @@ then
 fi
 
 # Create "elmasy" user, if not created before 
-if [ $(id -u elmasy > /dev/null 2>&1; echo $?) != 0 ]
+if [ $(id -u elmasy > /dev/null 2>&1; echo $?) != "0" ]
 then
     echo "Creating elmasy user..."
     adduser --no-create-home --gecos "" --disabled-login elmasy
@@ -27,21 +32,26 @@ then
     exit 1
 fi
 
-# Check if Elmasy installed before, and stop the running service
-if [ -e "/lib/systemd/system/elmasy.service" ]
+# WSL does not use systemd
+if [[ $(systemctl 2>&1) != *"Failed to connect to bus: Host is down"* ]]
 then
 
-    if [[ $(systemctl is-active elmasy.service) == "active" ]]
+    # Check if Elmasy installed before, and stop the running service
+    if [ -e "/lib/systemd/system/elmasy.service" ]
     then
-        echo "Elmasy is running!"
 
-        systemctl stop elmasy.service
-        if [ $? != 0 ]
+        if [[ $(systemctl is-active elmasy.service) == "active" ]]
         then
-            echo "Failed to stop Elmasy!"
-            exit 1
-        else
-            echo "Elmasy stopped!"
+            echo "Elmasy is running!"
+
+            systemctl stop elmasy.service
+            if [ $? != 0 ]
+            then
+                echo "Failed to stop Elmasy!"
+                exit 1
+            else
+                echo "Elmasy stopped!"
+            fi
         fi
     fi
 fi
@@ -75,12 +85,16 @@ then
     cp /opt/elmasy-old/elmasy.conf /opt/elmasy
 fi
 
-echo "Setting executable capabilities..."
+echo "Setting executable capabilities to allow raw socket..."
 setcap cap_net_admin,cap_net_raw=eip /opt/elmasy/elmasy
 
-echo "installing the new service file..."
-cp /opt/elmasy/elmasy.service /lib/systemd/system/elmasy.service
-systemctl daemon-reload
+# WSL does not use systemd
+if [[ $(systemctl 2>&1) != *"Failed to connect to bus: Host is down"* ]]
+then
+    echo "installing the new service file..."
+    cp /opt/elmasy/elmasy.service /lib/systemd/system/elmasy.service
+    systemctl daemon-reload
+fi
 
 echo "Removing leftover elmasy.tar..."
 rm elmasy.tar

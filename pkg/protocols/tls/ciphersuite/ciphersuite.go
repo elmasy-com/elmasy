@@ -1,6 +1,7 @@
 package ciphersuite
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	"github.com/elmasy-com/bytebuilder"
@@ -101,4 +102,17 @@ func Remove(ciphers []CipherSuite, cipher CipherSuite) []CipherSuite {
 	}
 
 	return v
+}
+
+// FindByUint16 returns a pointer to a CipherSuite from ciphers based on cipher.
+// If not found, returns nil.
+func FindByUint16(ciphers []CipherSuite, cipher uint16) *CipherSuite {
+
+	for i := range ciphers {
+		if binary.BigEndian.Uint16(ciphers[i].Value) == cipher {
+			return &ciphers[i]
+		}
+	}
+
+	return nil
 }

@@ -28,7 +28,7 @@ type Result struct {
 	Result []Target `json:"result"`
 }
 
-var SupportedTLS = []string{"ssl30", "tls10", "tls11", "tls12"}
+var SupportedTLS = []string{"ssl30", "tls10", "tls11", "tls12", "tls13"}
 
 func Get(c *gin.Context) {
 

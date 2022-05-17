@@ -9,6 +9,7 @@ import (
 	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls10"
 	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls11"
 	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls12"
+	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls13"
 	"github.com/elmasy-com/identify"
 	"github.com/elmasy-com/slices"
 	"github.com/gin-gonic/gin"
@@ -86,6 +87,17 @@ func Get(c *gin.Context) {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"version:": "tls12", "supported": r.Supported, "ciphers": slices.Strings(r.Ciphers)})
+
+	case "tls13":
+		r, serr := tls13.Scan(network, ip, port, 2*time.Second)
+		if serr != nil {
+			err := fmt.Errorf("Failed to scan tls13: %s", serr)
+			c.Error(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"version:": "tls13", "supported": r.Supported, "ciphers": slices.Strings(r.Ciphers)})
 
 	default:
 		err := fmt.Errorf("Invalid version: %s", version)

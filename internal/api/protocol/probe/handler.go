@@ -10,6 +10,7 @@ import (
 	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls10"
 	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls11"
 	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls12"
+	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls13"
 	"github.com/elmasy-com/identify"
 	"github.com/gin-gonic/gin"
 )
@@ -55,6 +56,8 @@ func Get(c *gin.Context) {
 		supported, err = tls11.Probe(network, ip, port, 2*time.Second)
 	case "tls12":
 		supported, err = tls12.Probe(network, ip, port, 2*time.Second)
+	case "tsl13":
+		supported, err = tls13.Probe(network, ip, port, 2*time.Second)
 	default:
 		err = fmt.Errorf("Invalid protocol: %s", protocol)
 		c.Error(err)

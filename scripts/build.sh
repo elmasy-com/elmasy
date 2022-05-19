@@ -11,11 +11,9 @@ clean() {
         then
                 rm -rf "build/elmasy"
         fi
-
-        if [ -f "build/elmasy*.tar" ]
-        then
-                rm "build/elmasy.tar"
-        fi
+     
+        rm build/elmasy*.tar
+        
 }
 
 

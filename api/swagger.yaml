@@ -5,7 +5,7 @@ info:
   description: Documentation for Elmasy API.
 
 servers:
-  - url: https://elmasy.com/api
+  - url: https://scan.elmasy.com/api
   - url: http://localhost:8080/api
 
 tags:

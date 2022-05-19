@@ -12,14 +12,7 @@ clean() {
                 rm -rf "build/elmasy"
         fi
 
-		
-
-		if [ -d "build/elmasy.com" ]
-        then
-                rm -rf "build/elmasy.com"
-        fi
-
-        if [ -f "build/elmasy.tar" ]
+        if [ -f "build/elmasy*.tar" ]
         then
                 rm "build/elmasy.tar"
         fi
@@ -51,34 +44,33 @@ elmasy-bin() {
 
 elmasy-frontend() {
 
-	echo "Downloading frontend..."
-
-	OUTPUT=$(git clone --recursive https://github.com/elmasy-com/elmasy.com build/elmasy.com 2>&1)
-	if [ $? != 0 ]
-	then
-		echo "Failed to clone https://github.com/elmasy-com/elmasy.com"
-		echo "$OUTPUT"
-		exit 1
-	fi
-
 	echo "Building frontend..."
-	OUTPUT=$(cd build/elmasy.com && hugo -d ../elmasy/static && cd ../.. 2>&1)
+
+	cd web/frontend
+	
+	OUTPUT=$(npm install 2>&1)
 	if [ $? != 0 ]
 	then
-		echo "Failed to build frontend"
+		echo "Failed to install npm dependencies!"
 		echo "$OUTPUT"
 		exit 1
 	fi
 
-	rm -rf "build/elmasy.com/"
+	OUTPUT=$(ng build --output-path=../../build/elmasy/static 2>&1)
+	if [ $? != 0 ]
+	then
+		echo "Failed to build elmasy!"
+		echo "$OUTPUT"
+		exit 1
+	fi
+
+	cd ../..
 }
 
 elmasy-doc() {
 
-	echo "Copying swagger-ui..."
-
-	cp -r web/swagger-ui/ build/elmasy/static/
-	cp api/swagger.yaml build/elmasy/static/swagger-ui/
+	echo "Copying swagger.yaml..."
+	cp api/swagger.yaml build/elmasy/static/
 
 }
 
@@ -106,9 +98,16 @@ pack() {
 
 	echo "Creating tar archive..."
 	cd build
-	tar -cf elmasy.tar elmasy/
+	tar -cf elmasy_$(git log -n 1 --pretty=format:"%H").tar elmasy/
 	rm -rf elmasy/
 	cd ..
+}
+
+deploy() {
+	pack
+
+	echo "Deploying..."
+	bash ignore/scripts/deploy.sh
 }
 
 run() {

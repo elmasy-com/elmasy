@@ -37,8 +37,8 @@ install() {
         adduser --no-create-home --gecos "" --disabled-login elmasy
     fi
 
-
-    OUTPUT=$(wget "https://github.com/elmasy-com/elmasy/raw/main/build/elmasy.tar" 2>&1)
+    # elmasy.tar always point to the latest release
+    OUTPUT=$(wget "https://elmasy.com/download/elmasy.tar" 2>&1)
     if [ $? != 0 ]
     then
         echo "Failed to download elmasy.tar!"

@@ -3,7 +3,7 @@
 set -e
 
 help() {
-	echo "build / pack / clean / run"
+	echo "build / pack / deploy / clean / run"
 }
 
 clean() {
@@ -12,7 +12,10 @@ clean() {
                 rm -rf "build/elmasy"
         fi
      
-        rm build/elmasy*.tar
+	 	if [ -f build/elmasy*.tar ]
+		then
+        	rm build/elmasy*.tar
+		fi
         
 }
 

@@ -4,22 +4,20 @@
 # Install elmasy.tar on a Debian server
 ###
 
-if [ $EUID != "0" ]
-then
-    echo "RUN AS ROOT!"
-    exit 1
-fi
-
 # Remove leftover file, if error occured before
 if [ -e elmasy.tar ]
 then
     rm elmasy.tar
 fi
 
+help() {
+    echo "Usage: bash $0 install / updateself"
+}
+
 updateself() {
 
    
-    OUTPUT=$(wget 'https://raw.githubusercontent.com/elmasy-com/elmasy/main/scripts/install.sh' 2>&1)
+    OUTPUT=$(wget -O $0 'https://raw.githubusercontent.com/elmasy-com/elmasy/main/scripts/install.sh' 2>&1)
     if [ $? != 0 ]
     then
         echo "Failed to download install.sh!"
@@ -30,11 +28,26 @@ updateself() {
 
 install() {
 
+    if [ $EUID != "0" ]
+    then
+        echo "RUN AS ROOT!"
+        exit 1
+    fi
+
+    WAS_ACTIVE="false"
+
     # Create "elmasy" user, if not created before 
     if [ $(id -u elmasy > /dev/null 2>&1; echo $?) != "0" ]
     then
         echo "Creating elmasy user..."
-        adduser --no-create-home --gecos "" --disabled-login elmasy
+       
+    OUTPUT=$(adduser --no-create-home --gecos '' --disabled-login elmasy 2>&1)
+    if [ $? != 0 ]
+    then
+        echo "Failed to create elmasy user!"
+        echo "$OUTPUT"
+        exit 1
+    fi
     fi
 
     # elmasy.tar always point to the latest release
@@ -57,6 +70,8 @@ install() {
             if [[ $(systemctl is-active elmasy.service) == "active" ]]
             then
                 echo "Elmasy is running!"
+
+                WAS_ACTIVE="true"
 
                 systemctl stop elmasy.service
                 if [ $? != 0 ]
@@ -112,4 +127,16 @@ install() {
 
     echo "Removing leftover elmasy.tar..."
     rm elmasy.tar
+
+    if [[ $WAS_ACTIVE == "true" ]]
+    then
+        systemctl start elmasy
+    fi
 }
+
+if [[ $1 == "" ]]
+then
+    help
+else
+    $1
+fi

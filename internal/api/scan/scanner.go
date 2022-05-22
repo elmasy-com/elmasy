@@ -8,11 +8,13 @@ import (
 	"github.com/elmasy-com/elmasy/pkg/go-sdk"
 )
 
+var SupportedTLS = []string{"ssl30", "tls10", "tls11", "tls12", "tls13"}
+
 var (
 	ErrPortClosed = errors.New("Port is closed")
 )
 
-func scanTarget(c chan<- Target, wg *sync.WaitGroup, network, ip, port string) {
+func scanTarget(c chan<- Target, wg *sync.WaitGroup, network, ip, port, servername string) {
 
 	defer wg.Done()
 
@@ -40,7 +42,7 @@ func scanTarget(c chan<- Target, wg *sync.WaitGroup, network, ip, port string) {
 
 	for i := range SupportedTLS {
 		twg.Add(1)
-		go scanTLS(tlsResults, &twg, SupportedTLS[i], network, ip, port)
+		go scanTLS(tlsResults, &twg, SupportedTLS[i], network, ip, port, servername)
 	}
 
 	twg.Wait()
@@ -58,10 +60,20 @@ func scanTarget(c chan<- Target, wg *sync.WaitGroup, network, ip, port string) {
 	c <- t
 }
 
-func scanTLS(t chan<- TLS, twg *sync.WaitGroup, version, network, ip, port string) {
+func scanTLS(t chan<- TLS, twg *sync.WaitGroup, version, network, ip, port, servername string) {
 	defer twg.Done()
 
-	tls, err := sdk.AnalyzeTLS(version, network, ip, port)
+	tls, err := sdk.AnalyzeTLS(version, network, ip, port, servername)
 
-	t <- TLS{Version: version, Supported: tls.Supported, Ciphers: tls.Ciphers, Error: err}
+	if err != nil {
+		t <- TLS{Error: err}
+		return
+	}
+
+	if len(tls) != 1 {
+		t <- TLS{Error: fmt.Errorf("multiple result for one scan")}
+		return
+	}
+
+	t <- TLS{Version: version, Supported: tls[0].Supported, Ciphers: tls[0].Ciphers, Error: err}
 }

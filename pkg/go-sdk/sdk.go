@@ -8,6 +8,7 @@ import (
 
 var (
 	API_PATH      = "https://elmasy.com/api"
+	USER_AGENT    = "Elmasy-SDK"
 	DefaultClient = &http.Client{}
 )
 
@@ -28,6 +29,7 @@ type Errors struct {
 }
 
 type TLS struct {
+	IP        string   `json:"ip"`
 	Version   string   `json:"version"`
 	Supported bool     `json:"supported"`
 	Ciphers   []string `json:"ciphers"`
@@ -58,6 +60,7 @@ func Get(endpoint string) ([]byte, int, error) {
 		return nil, 0, fmt.Errorf("failed to create a new request: %s", err)
 	}
 	req.Header.Add("Accept", "application/json")
+	req.Header.Add("User-Agent", USER_AGENT)
 
 	resp, err := DefaultClient.Do(req)
 	if err != nil {

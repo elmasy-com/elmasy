@@ -36,21 +36,21 @@ func DNSLookup(t, n string) ([]string, error) {
 	}
 }
 
-func AnalyzeTLS(version, network, ip, port string) (TLS, error) {
+func AnalyzeTLS(version, network, ip, port, servername string) ([]TLS, error) {
 
-	url := fmt.Sprintf("/protocol/tls?version=%s&network=%s&ip=%s&port=%s", version, network, ip, port)
+	url := fmt.Sprintf("/protocol/tls?version=%s&network=%s&target=%s&port=%s&servername=%s", version, network, ip, port, servername)
 
 	body, status, err := Get(url)
 	if err != nil {
-		return TLS{}, err
+		return nil, err
 	}
 
 	switch status {
 	case 200:
-		r := TLS{}
+		var r []TLS
 
 		if err := json.Unmarshal(body, &r); err != nil {
-			return TLS{}, fmt.Errorf("failed to unmarshal: %s", err)
+			return nil, fmt.Errorf("failed to unmarshal: %s", err)
 		}
 
 		return r, nil
@@ -58,12 +58,12 @@ func AnalyzeTLS(version, network, ip, port string) (TLS, error) {
 		e := Error{}
 
 		if err := json.Unmarshal(body, &e); err != nil {
-			return TLS{}, fmt.Errorf("failed to unmarshal: %s", err)
+			return nil, fmt.Errorf("failed to unmarshal: %s", err)
 		}
 
-		return TLS{}, e
+		return nil, e
 	default:
-		return TLS{}, fmt.Errorf("unknown status: %d", status)
+		return nil, fmt.Errorf("unknown status: %d", status)
 	}
 }
 

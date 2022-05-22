@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/elmasy-com/elmasy/pkg/go-sdk"
+	"github.com/elmasy-com/elmasy/internal/utils"
 	"github.com/elmasy-com/identify"
 	"github.com/gin-gonic/gin"
 )
 
 type TLS struct {
+	IP        string   `json:"ip"`
 	Version   string   `json:"version"`
 	Supported bool     `json:"supported"`
 	Ciphers   []string `json:"ciphers"`
@@ -27,8 +28,6 @@ type Target struct {
 type Result struct {
 	Result []Target `json:"result"`
 }
-
-var SupportedTLS = []string{"ssl30", "tls10", "tls11", "tls12", "tls13"}
 
 func Get(c *gin.Context) {
 
@@ -64,12 +63,14 @@ func Get(c *gin.Context) {
 		return
 	}
 
-	var ips []string
+	ips := make([]string, 0)
+	var servername string
 
 	if identify.IsDomainName(target) {
-		ips, err = sdk.DNSLookup("A", target)
+		ips, err = utils.Lookup46(target)
 		if err != nil {
 			var code int
+
 			if err.Error() == "NXDOMAIN" {
 				code = http.StatusNotFound
 			} else {
@@ -81,6 +82,8 @@ func Get(c *gin.Context) {
 			c.JSON(code, gin.H{"error": err.Error()})
 			return
 		}
+
+		servername = target
 	} else {
 		ips = append(ips, target)
 	}
@@ -92,7 +95,7 @@ func Get(c *gin.Context) {
 
 		wg.Add(1)
 
-		scanTarget(targets, &wg, network, ips[i], port)
+		go scanTarget(targets, &wg, network, ips[i], port, servername)
 	}
 
 	wg.Wait()

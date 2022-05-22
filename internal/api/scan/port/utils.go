@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/elmasy-com/elmasy/internal/config"
+	"github.com/elmasy-com/elmasy/internal/utils"
 	"github.com/elmasy-com/identify"
 	"github.com/gin-gonic/gin"
 )
@@ -61,6 +62,9 @@ func parseQuery(c *gin.Context) (Params, error) {
 		c.Error(err)
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return params, err
+	}
+	if identify.IsValidIPv6(params.IP) {
+		params.IP = utils.IPv6BracketAdd(params.IP)
 	}
 
 	timeoutQuery := c.DefaultQuery("timeout", "2")

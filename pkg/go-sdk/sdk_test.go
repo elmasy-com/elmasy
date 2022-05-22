@@ -2,9 +2,9 @@ package sdk
 
 import "testing"
 
-// func init() {
-// 	API_PATH = "http://localhost:8080/api"
-// }
+func init() {
+	API_PATH = "http://localhost:8080/api"
+}
 
 func TestGetIP(t *testing.T) {
 	ip, err := GetIP()
@@ -47,7 +47,7 @@ func TestDNSLookup(t *testing.T) {
 
 func TestAnalyzeTLS(t *testing.T) {
 
-	r, err := AnalyzeTLS("tls12", "tcp", "95.216.184.245", "443")
+	r, err := AnalyzeTLS("tls12", "tcp", "95.216.184.245", "443", "danielgorbe.com")
 	if err != nil {
 		t.Fatalf("FAIL: %s", err)
 	}

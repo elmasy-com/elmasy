@@ -11,9 +11,9 @@ func createClosureAlert() []byte {
 }
 
 // Shorthand to create a ClientHello
-func createPacketClientHello(ciphers []ciphersuite.CipherSuite) []byte {
+func createPacketClientHello(ciphers []ciphersuite.CipherSuite, ServerName string) []byte {
 
-	body := marshalClientHello(ciphers)
+	body := marshalClientHello(ciphers, ServerName)
 
 	fragment := marshalHandshake(1, body)
 

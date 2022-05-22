@@ -86,11 +86,11 @@ func sendClosureALert(conn *net.Conn, timeout time.Duration) error {
 }
 
 // Do the handshake and return the response as a byte slice.
-func handshake(network, address string, timeout time.Duration, ciphers []ciphersuite.CipherSuite) (SSL30, error) {
+func handshake(network, ip, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite) (SSL30, error) {
 
-	conn, err := net.DialTimeout(network, address, timeout)
+	conn, err := net.DialTimeout(network, ip+":"+port, timeout)
 	if err != nil {
-		return SSL30{}, fmt.Errorf("failed to connect to %s: %s", address, err)
+		return SSL30{}, fmt.Errorf("failed to connect to %s:%s: %s", ip, port, err)
 	}
 	defer conn.Close()
 
@@ -117,7 +117,7 @@ func handshake(network, address string, timeout time.Duration, ciphers []ciphers
 	return result, nil
 }
 
-func getSupportedCiphers(network, address string, timeout time.Duration, ciphers []ciphersuite.CipherSuite) ([]ciphersuite.CipherSuite, error) {
+func getSupportedCiphers(network, ip, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite) ([]ciphersuite.CipherSuite, error) {
 
 	var (
 		supported = make([]ciphersuite.CipherSuite, 0)
@@ -125,7 +125,7 @@ func getSupportedCiphers(network, address string, timeout time.Duration, ciphers
 
 	for {
 
-		result, err := handshake(network, address, timeout, ciphers)
+		result, err := handshake(network, ip, port, timeout, ciphers)
 		if err != nil && !strings.Contains(err.Error(), "connection reset by peer") {
 			return supported, fmt.Errorf("failed to do handshake: %s", err)
 		}
@@ -140,11 +140,11 @@ func getSupportedCiphers(network, address string, timeout time.Duration, ciphers
 
 }
 
-func Scan(network, address string, timeout time.Duration) (SSL30, error) {
+func Scan(network, ip, port string, timeout time.Duration) (SSL30, error) {
 
 	ciphers := ciphersuite.Get(ciphersuite.SSL30)
 
-	result, err := handshake(network, address, timeout, ciphers)
+	result, err := handshake(network, ip, port, timeout, ciphers)
 	if err != nil {
 		return result, fmt.Errorf("handshake failed: %s", err)
 	}
@@ -156,7 +156,7 @@ func Scan(network, address string, timeout time.Duration) (SSL30, error) {
 	// Remove the default cipher and test the remaining
 	ciphers = ciphersuite.Remove(ciphers, result.DefaultCipher)
 
-	supported, err := getSupportedCiphers(network, address, timeout, ciphers)
+	supported, err := getSupportedCiphers(network, ip, port, timeout, ciphers)
 	if err != nil {
 		return result, fmt.Errorf("failed to get supported ciphers: %s", err)
 	}
@@ -171,7 +171,7 @@ func Probe(network, ip, port string, timeout time.Duration) (bool, error) {
 
 	ciphers := ciphersuite.Get(ciphersuite.SSL30)
 
-	r, err := handshake(network, ip+":"+port, timeout, ciphers)
+	r, err := handshake(network, ip, port, timeout, ciphers)
 
 	return r.Supported, err
 }

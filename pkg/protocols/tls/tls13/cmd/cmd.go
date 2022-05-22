@@ -1,37 +1,36 @@
 package main
 
 /*
-	Manual testing
+	Manual testing: go run . <ip> <port>
 */
-
 import (
 	"fmt"
 	"os"
 	"time"
 
-	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls11"
+	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls13"
 )
 
 func main() {
 
-	ip := "142.132.164.231"
+	ip := "[2a01:4f9:c010:81b5::1]"
 	port := "443"
 
-	r, err := tls11.Probe("tcp", ip, port, 2*time.Second, tls11.Opts{})
+	r, err := tls13.Probe("tcp", ip, port, 2*time.Second, tls13.Opts{})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Fail without SNI: %s\n", err)
 	} else {
 		fmt.Printf("%#v\n", r)
 	}
 
-	r, err = tls11.Probe("tcp", ip, port, 2*time.Second, tls11.Opts{ServerName: "danielgorbe.com"})
+	r, err = tls13.Probe("tcp", ip, port, 2*time.Second, tls13.Opts{ServerName: "danielgorbe.com"})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Fail with invalid SNI: %s\n", err)
 	} else {
 		fmt.Printf("%#v\n", r)
 	}
 
-	r, err = tls11.Probe("tcp", ip, port, 2*time.Second, tls11.Opts{ServerName: "elmasy.com"})
+	r, err = tls13.Probe("tcp", ip, port, 2*time.Second, tls13.Opts{ServerName: "elmasy.com"})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Fail with valid SNI: %s\n", err)
 	} else {

@@ -134,7 +134,8 @@ paths:
     get:
       summary: Analyze SSL/TLS.
       description: >
-        Analyze SSL/TLS on ip:port. Returns the supported ciphers.
+        Analyze SSL/TLS on target:port. Returns the supported ciphers.
+        If target is a hostname, check every `A` and `AAAA` record.
       tags:
         - Protocol
       parameters:
@@ -150,8 +151,8 @@ paths:
           required: false
           schema:
             type: string
-        - name: ip
-          description: The target IP address.
+        - name: target
+          description: The target IP address or hostname.
           in: query
           required: true
           schema:
@@ -162,13 +163,21 @@ paths:
           required: true
           schema:
             type: string
+        - name: servername
+          description: The server name for SNI.
+          in: query
+          required: false
+          schema:
+            type: string
       responses:
         200:
           description: Success.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TLS"
+                type: array
+                items:
+                  $ref: "#/components/schemas/TLS"
         400:
           description: Bad request
           content:
@@ -186,7 +195,7 @@ paths:
     get:
       summary: Probe protocol.
       description: >
-        Probe whether the given protocol is supported on network on ip:port.
+        Probe whether the given protocol is supported on network on target:port.
       tags:
         - Protocol
       parameters:
@@ -203,8 +212,8 @@ paths:
           required: false
           schema:
             type: string
-        - name: ip
-          description: The target IP address.
+        - name: target
+          description: The target. If target is a hostname, than probe the given protocol on every IP address. 
           in: query
           required: true
           schema:
@@ -221,7 +230,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Result"
+                $ref: "#/components/schemas/Probe"
         400:
           description: Bad request.
           content:
@@ -391,6 +400,15 @@ components:
           type: array
           items:
             type: string
+    Probe:
+      type: array
+      items:
+        type: object
+        properties:
+          ip:
+            type: string
+          supported:
+            type: boolean
     Target:
       type: object
       properties:

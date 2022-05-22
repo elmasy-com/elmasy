@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/elmasy-com/elmasy/pkg/protocols/tls/ciphersuite"
-	"github.com/elmasy-com/identify"
 	tls "github.com/refraction-networking/utls"
 )
 
@@ -18,6 +17,10 @@ type TLS13 struct {
 	Certificates  []x509.Certificate
 	DefaultCipher ciphersuite.CipherSuite
 	Ciphers       []ciphersuite.CipherSuite
+}
+
+type Opts struct {
+	ServerName string // SNI
 }
 
 func ciphersToUint16(ciphers []ciphersuite.CipherSuite) []uint16 {
@@ -32,27 +35,24 @@ func ciphersToUint16(ciphers []ciphersuite.CipherSuite) []uint16 {
 	return v
 }
 
-func handshake(network, target, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite) (TLS13, error) {
+func handshake(network, ip, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite, opts Opts) (TLS13, error) {
 
 	var (
 		conf   tls.Config
 		result TLS13
 	)
 
-	switch true {
-	case identify.IsDomainName(target):
-		conf.ServerName = target
-	case identify.IsValidIP(target):
+	if opts.ServerName == "" {
 		conf.InsecureSkipVerify = true
-	default:
-		return result, fmt.Errorf("invalid target: %s", target)
+	} else {
+		conf.ServerName = opts.ServerName
 	}
 
-	dialConn, err := net.DialTimeout(network, target+":"+port, timeout)
+	dialConn, err := net.DialTimeout(network, ip+":"+port, timeout)
 	if err != nil {
 		return result, err
 	}
-	uTlsConn := tls.UClient(dialConn, &tls.Config{InsecureSkipVerify: true}, tls.HelloCustom)
+	uTlsConn := tls.UClient(dialConn, &conf, tls.HelloCustom)
 	defer uTlsConn.Close()
 
 	spec := tls.ClientHelloSpec{
@@ -60,7 +60,6 @@ func handshake(network, target, port string, timeout time.Duration, ciphers []ci
 		TLSVersMin:   tls.VersionTLS10,
 		CipherSuites: ciphersToUint16(ciphers),
 		Extensions: []tls.TLSExtension{
-			&tls.SNIExtension{},
 			&tls.SupportedCurvesExtension{Curves: []tls.CurveID{tls.X25519, tls.CurveP256, tls.CurveP384, tls.CurveP521}},
 			&tls.SupportedPointsExtension{SupportedPoints: []byte{0}}, // uncompressed
 			&tls.SessionTicketExtension{},
@@ -81,6 +80,10 @@ func handshake(network, target, port string, timeout time.Duration, ciphers []ci
 			&tls.SupportedVersionsExtension{Versions: []uint16{tls.VersionTLS13}},
 		},
 		GetSessionID: nil,
+	}
+
+	if opts.ServerName != "" {
+		spec.Extensions = append(spec.Extensions, &tls.SNIExtension{})
 	}
 
 	if err := uTlsConn.ApplyPreset(&spec); err != nil {
@@ -121,13 +124,13 @@ func handshake(network, target, port string, timeout time.Duration, ciphers []ci
 
 // There are ciphersuites, that uTLS cant handle.
 // In this case, iterate over it, one by one. If the error message is "server chose an unconfigured cipher suite", the ciphersuite is supported by the server.
-func getUnconfiguredCiphers(network, target, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite) ([]ciphersuite.CipherSuite, error) {
+func getUnconfiguredCiphers(network, ip, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite, opts Opts) ([]ciphersuite.CipherSuite, error) {
 
 	supported := make([]ciphersuite.CipherSuite, 0)
 
 	for i := range ciphers {
 
-		_, err := handshake(network, target, port, timeout, []ciphersuite.CipherSuite{ciphers[i]})
+		_, err := handshake(network, ip, port, timeout, []ciphersuite.CipherSuite{ciphers[i]}, opts)
 
 		if err != nil {
 			if strings.Contains(err.Error(), "server chose an unconfigured cipher suite") {
@@ -141,7 +144,7 @@ func getUnconfiguredCiphers(network, target, port string, timeout time.Duration,
 	return supported, nil
 }
 
-func getSupportedCiphers(network, target, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite) ([]ciphersuite.CipherSuite, error) {
+func getSupportedCiphers(network, ip, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite, opts Opts) ([]ciphersuite.CipherSuite, error) {
 
 	var (
 		supported = make([]ciphersuite.CipherSuite, 0)
@@ -149,11 +152,11 @@ func getSupportedCiphers(network, target, port string, timeout time.Duration, ci
 
 	for {
 
-		result, err := handshake(network, target, port, timeout, ciphers)
+		result, err := handshake(network, ip, port, timeout, ciphers, opts)
 		if err != nil {
 
 			if strings.Contains(err.Error(), "server chose an unconfigured cipher suite") {
-				unconfigured, err := getUnconfiguredCiphers(network, target, port, timeout, ciphers)
+				unconfigured, err := getUnconfiguredCiphers(network, ip, port, timeout, ciphers, opts)
 				if err != nil {
 					return supported, fmt.Errorf("failed to get unconfigured ciphers: %s", err)
 				}
@@ -173,11 +176,11 @@ func getSupportedCiphers(network, target, port string, timeout time.Duration, ci
 	}
 }
 
-func Scan(network, target, port string, timeout time.Duration) (TLS13, error) {
+func Scan(network, ip, port string, timeout time.Duration, opts Opts) (TLS13, error) {
 
 	ciphers := ciphersuite.Get(ciphersuite.TLS13)
 
-	result, err := handshake(network, target, port, timeout, ciphers)
+	result, err := handshake(network, ip, port, timeout, ciphers, opts)
 	if err != nil {
 		return result, fmt.Errorf("handshake failed: %s", err)
 	}
@@ -188,7 +191,7 @@ func Scan(network, target, port string, timeout time.Duration) (TLS13, error) {
 
 	ciphers = ciphersuite.Remove(ciphers, result.DefaultCipher)
 
-	supported, err := getSupportedCiphers(network, target, port, timeout, ciphers)
+	supported, err := getSupportedCiphers(network, ip, port, timeout, ciphers, opts)
 	if err != nil {
 		return result, fmt.Errorf("failed to get supported ciphers: %s", err)
 	}
@@ -199,11 +202,11 @@ func Scan(network, target, port string, timeout time.Duration) (TLS13, error) {
 
 }
 
-func Probe(network, target, port string, timeout time.Duration) (bool, error) {
+func Probe(network, ip, port string, timeout time.Duration, opts Opts) (bool, error) {
 
 	ciphers := ciphersuite.Get(ciphersuite.TLS13)
 
-	r, err := handshake(network, target, port, timeout, ciphers)
+	r, err := handshake(network, ip, port, timeout, ciphers, opts)
 
 	return r.Supported, err
 }

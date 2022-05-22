@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/elmasy-com/bytebuilder v0.4.3
-	github.com/elmasy-com/identify v0.0.0-20220408164304-c656c8f124b6
+	github.com/elmasy-com/identify v1.0.0
 	github.com/elmasy-com/slices v0.0.0-20220420084118-01ac765fdcea
 	github.com/gin-contrib/static v0.0.1
 	github.com/gin-gonic/gin v1.7.7

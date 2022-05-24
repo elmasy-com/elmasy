@@ -2,6 +2,11 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/elmasy-com/elmasy)](https://goreportcard.com/report/github.com/elmasy-com/elmasy)
 
+<p align="center">
+  <img src="https://elmasy.com/logo.png"/>
+</p>
+
+
 Elmasy *will be* an attack surface analysis tool.Discover and assess as many as possible publicly accessible assets from a domain name.
 
 This project has 3 goals:

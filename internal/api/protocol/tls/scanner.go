@@ -81,7 +81,7 @@ func scanMany(version, network, domain, port, servername string) ([]Result, erro
 		}
 
 		if len(r) != 1 {
-			return nil, fmt.Errorf("Failed to scan: unknwon number of result: %d", len(r))
+			return nil, fmt.Errorf("Failed to scan: unknown number of result: %d", len(r))
 		}
 
 		res = append(res, Result{IP: targets[i], Version: version, Supported: r[0].Supported, Ciphers: r[0].Ciphers})

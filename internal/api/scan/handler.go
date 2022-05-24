@@ -7,16 +7,17 @@ import (
 	"sync"
 
 	"github.com/elmasy-com/elmasy/internal/utils"
+	"github.com/elmasy-com/elmasy/pkg/go-sdk"
 	"github.com/elmasy-com/identify"
 	"github.com/gin-gonic/gin"
 )
 
 type TLS struct {
-	IP        string   `json:"ip"`
-	Version   string   `json:"version"`
-	Supported bool     `json:"supported"`
-	Ciphers   []string `json:"ciphers"`
-	Error     error    `json:"-"`
+	IP        string       `json:"ip"`
+	Version   string       `json:"version"`
+	Supported bool         `json:"supported"`
+	Ciphers   []sdk.Cipher `json:"ciphers"`
+	Error     error        `json:"-"`
 }
 
 type Target struct {

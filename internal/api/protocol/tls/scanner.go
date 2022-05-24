@@ -12,7 +12,6 @@ import (
 	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls11"
 	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls12"
 	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls13"
-	"github.com/elmasy-com/slices"
 )
 
 // scanSingle scan TLS using pkg/protocols package.
@@ -30,31 +29,31 @@ func scanSingle(version, network, ip, port, servername string) (Result, error) {
 		var r ssl30.SSL30
 		r, err = ssl30.Scan(network, ip, port, 2*time.Second)
 
-		res = Result{IP: ip, Version: "ssl30", Supported: r.Supported, Ciphers: slices.Strings(r.Ciphers)}
+		res = Result{IP: ip, Version: "ssl30", Supported: r.Supported, Ciphers: resultCiphers(r.Ciphers)}
 
 	case "tls10":
 		var r tls10.TLS10
 		r, err = tls10.Scan(network, ip, port, 2*time.Second, tls10.Opts{ServerName: servername})
 
-		res = Result{IP: ip, Version: "tls10", Supported: r.Supported, Ciphers: slices.Strings(r.Ciphers)}
+		res = Result{IP: ip, Version: "tls10", Supported: r.Supported, Ciphers: resultCiphers(r.Ciphers)}
 
 	case "tls11":
 		var r tls11.TLS11
 		r, err = tls11.Scan(network, ip, port, 2*time.Second, tls11.Opts{ServerName: servername})
 
-		res = Result{IP: ip, Version: "tls11", Supported: r.Supported, Ciphers: slices.Strings(r.Ciphers)}
+		res = Result{IP: ip, Version: "tls11", Supported: r.Supported, Ciphers: resultCiphers(r.Ciphers)}
 
 	case "tls12":
 		var r tls12.TLS12
 		r, err = tls12.Scan(network, ip, port, 2*time.Second, tls12.Opts{ServerName: servername})
 
-		res = Result{IP: ip, Version: "tls12", Supported: r.Supported, Ciphers: slices.Strings(r.Ciphers)}
+		res = Result{IP: ip, Version: "tls12", Supported: r.Supported, Ciphers: resultCiphers(r.Ciphers)}
 
 	case "tls13":
 		var r tls13.TLS13
 		r, err = tls13.Scan(network, ip, port, 2*time.Second, tls13.Opts{ServerName: servername})
 
-		res = Result{IP: ip, Version: "tls13", Supported: r.Supported, Ciphers: slices.Strings(r.Ciphers)}
+		res = Result{IP: ip, Version: "tls13", Supported: r.Supported, Ciphers: resultCiphers(r.Ciphers)}
 
 	default:
 		return Result{}, fmt.Errorf("Invalid version: %s", version)
@@ -84,7 +83,7 @@ func scanMany(version, network, domain, port, servername string) ([]Result, erro
 			return nil, fmt.Errorf("Failed to scan: unknown number of result: %d", len(r))
 		}
 
-		res = append(res, Result{IP: targets[i], Version: version, Supported: r[0].Supported, Ciphers: r[0].Ciphers})
+		res = append(res, Result{IP: targets[i], Version: version, Supported: r[0].Supported, Ciphers: resultCiphers(r[0].Ciphers)})
 	}
 
 	return res, nil

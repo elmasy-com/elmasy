@@ -8,11 +8,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type Cipher struct {
+	Name     string
+	Security string
+}
+
 type Result struct {
 	IP        string   `json:"ip"`
 	Version   string   `json:"version"`
 	Supported bool     `json:"supported"`
-	Ciphers   []string `json:"ciphers"`
+	Ciphers   []Cipher `json:"ciphers"`
 }
 
 func Get(c *gin.Context) {

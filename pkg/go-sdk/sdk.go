@@ -28,11 +28,16 @@ type Errors struct {
 	Errors []string `json:"errors"`
 }
 
+type Cipher struct {
+	Name     string `json:"name"`
+	Security string `json:"security"`
+}
+
 type TLS struct {
 	IP        string   `json:"ip"`
 	Version   string   `json:"version"`
 	Supported bool     `json:"supported"`
-	Ciphers   []string `json:"ciphers"`
+	Ciphers   []Cipher `json:"ciphers"`
 }
 
 type Target struct {

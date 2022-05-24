@@ -399,7 +399,11 @@ components:
         ciphers:
           type: array
           items:
-            type: string
+            type: object
+            properties:
+              type: string
+            security:
+              type: string
     Probe:
       type: array
       items:

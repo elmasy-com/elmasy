@@ -59,6 +59,23 @@ install() {
         exit 1
     fi
 
+    OUTPUT=$(wget "https://elmasy.com/download/elmasy.tar.sum" 2>&1)
+    if [ $? != 0 ]
+    then
+        echo "Failed to download elmasy.tar.sum!"
+        echo "$OUTPUT"
+        exit 1
+    fi
+
+    echo "Checking SHA512SUM..."
+    OUTPUT=$(sha512sum -c elmasy.tar.sum 2>&1)
+    if [ $? != 0 ]
+    then
+        echo "Failed to check SHA512SUM!"
+        echo "$OUTPUT"
+        exit 1
+    fi
+
     # WSL does not use systemd
     if [[ $(systemctl 2>&1) != *"Failed to connect to bus: Host is down"* ]]
     then
@@ -102,7 +119,7 @@ install() {
 
     if [ -e /opt/elmasy-old ]
     then
-        OUTPUT=$(diff /opt/elmasy/elmasy.conf /opt/elmasy-old/elmasy.conf)
+        OUTPUT=$(diff /opt/elmasy/elmasy.conf.example /opt/elmasy-old/elmasy.conf)
         if [ $? != 0 ]
         then
             echo "Changes in the new config:"
@@ -125,11 +142,13 @@ install() {
         systemctl daemon-reload
     fi
 
-    echo "Removing leftover elmasy.tar..."
+    echo "Removing leftover files..."
     rm elmasy.tar
+    rm elmasy.tar.sum
 
     if [[ $WAS_ACTIVE == "true" ]]
     then
+        echo "Elmasy was running, restarting..."
         systemctl start elmasy
     fi
 }

@@ -71,7 +71,7 @@ func AnalyzeTLS(version, network, ip, port, servername string) ([]types.TLS, err
 
 func Probe(protocol, network, ip, port string) (bool, error) {
 
-	url := fmt.Sprintf("/protocol/probe?protocol=%s&network=%s&target=%s&port=%s", protocol, network, ip, port)
+	url := fmt.Sprintf("/protocol/probe?protocol=%s&network=%s&ip=%s&port=%s", protocol, network, ip, port)
 
 	body, status, err := Get(url)
 	if err != nil {
@@ -80,13 +80,13 @@ func Probe(protocol, network, ip, port string) (bool, error) {
 
 	switch status {
 	case 200:
-		r := types.Result{}
+		r := types.ResultBool{}
 
 		if err = json.Unmarshal(body, &r); err != nil {
 			return false, fmt.Errorf("failed to unmarshal: %s", err)
 		}
 
-		return r.Result == "true", nil
+		return r.Result, nil
 	case 400, 500:
 		e := types.Error{}
 

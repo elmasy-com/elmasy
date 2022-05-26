@@ -195,7 +195,7 @@ paths:
     get:
       summary: Probe protocol.
       description: >
-        Probe whether the given protocol is supported on network on target:port.
+        A **Low Level** API to probe whether the given protocol is supported on network on ip:port.
       tags:
         - Protocol
       parameters:
@@ -212,8 +212,8 @@ paths:
           required: false
           schema:
             type: string
-        - name: target
-          description: The target. If target is a hostname, than probe the given protocol on every IP address. 
+        - name: ip
+          description: The target IP address.
           in: query
           required: true
           schema:
@@ -230,7 +230,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Probe"
+                $ref: "#/components/schemas/ResultBool"
         400:
           description: Bad request.
           content:
@@ -367,6 +367,12 @@ components:
       properties:
         result:
           type: string
+    
+    ResultBool:
+      type: object
+      properties:
+        result:
+          type: boolean
       
     Results:
       type: object
@@ -404,15 +410,7 @@ components:
               type: string
             security:
               type: string
-    Probe:
-      type: array
-      items:
-        type: object
-        properties:
-          ip:
-            type: string
-          supported:
-            type: boolean
+
     Target:
       type: object
       properties:

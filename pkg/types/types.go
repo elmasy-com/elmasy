@@ -4,6 +4,10 @@ type Result struct {
 	Result string `json:"result"`
 }
 
+type ResultBool struct {
+	Result bool `json:"result"`
+}
+
 type Results struct {
 	Results []string `json:"results"`
 }

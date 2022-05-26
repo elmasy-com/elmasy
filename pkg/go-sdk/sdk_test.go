@@ -57,7 +57,7 @@ func TestAnalyzeTLS(t *testing.T) {
 
 func TestPortScan(t *testing.T) {
 
-	r, errs := PortScan("stealth", "142.132.164.231", "80", "2")
+	r, errs := PortScan("connect", "142.132.164.231", "80", "2")
 	if errs != nil {
 		t.Fatalf("FAIL: %v", errs)
 	}

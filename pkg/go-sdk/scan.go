@@ -47,7 +47,6 @@ func PortScan(technique, ip, ports, timeout string) (string, error) {
 		return "", err
 	}
 
-	fmt.Printf("BODY:\n%s\n\n", body)
 	switch status {
 	case 200:
 		var r types.Result

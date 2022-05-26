@@ -265,7 +265,7 @@ paths:
           schema:
             type: string
         - name: network
-          description: The target network. Defaults to `tcp`.
+          description: The target network. Can be `tcp` or `udp`, defaults to `tcp`.
           in: query
           required: false
           schema:

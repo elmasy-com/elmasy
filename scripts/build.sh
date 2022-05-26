@@ -47,7 +47,7 @@ elmasy-frontend() {
 
 	echo "Building frontend..."
 
-	cd web/frontend
+	cd frontend
 	
 	OUTPUT=$(npm install 2>&1)
 	if [ $? != 0 ]
@@ -57,7 +57,7 @@ elmasy-frontend() {
 		exit 1
 	fi
 
-	OUTPUT=$(ng build --output-path=../../build/elmasy/static 2>&1)
+	OUTPUT=$(ng build --prod --output-path=../build/elmasy/static 2>&1)
 	if [ $? != 0 ]
 	then
 		echo "Failed to build elmasy!"
@@ -65,7 +65,7 @@ elmasy-frontend() {
 		exit 1
 	fi
 
-	cd ../..
+	cd ..
 }
 
 elmasy-doc() {

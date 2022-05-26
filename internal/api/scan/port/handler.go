@@ -26,14 +26,18 @@ func Get(c *gin.Context) {
 		result, errs = portscan.ConnectScan(params.IP, []int{params.Port}, params.Timeout)
 	}
 
+	fmt.Printf("1:\n%#v\n\n", errs)
+
 	if len(errs) > 0 {
 
 		for i := range errs {
 			c.Error(errs[i])
 		}
 
+		fmt.Printf("2:\n%#v\n\n", errs[0])
+
 		// Return only the first error
-		c.JSON(http.StatusInternalServerError, gin.H{"error": errs[0]})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errs[0].Error()})
 		return
 	}
 

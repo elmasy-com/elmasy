@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/elmasy-com/identify"
 	"github.com/miekg/dns"
 )
 
@@ -28,11 +29,19 @@ func init() {
 // getServer used to randomize DNS servers.
 func getServer() string {
 
+	var r string
+
 	if len(conf.Servers) == 1 {
-		return conf.Servers[0] + ":53"
+		r = conf.Servers[0]
+	} else {
+		r = conf.Servers[rand.Intn(len(conf.Servers))]
 	}
 
-	return conf.Servers[rand.Intn(len(conf.Servers))] + ":53"
+	if identify.IsValidIPv6(r) {
+		r = "[" + r + "]"
+	}
+
+	return r + ":53"
 }
 
 // Generic query for internal use.

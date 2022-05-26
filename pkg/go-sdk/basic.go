@@ -3,6 +3,8 @@ package sdk
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/elmasy-com/elmasy/pkg/types"
 )
 
 func GetIP() (string, error) {
@@ -14,7 +16,7 @@ func GetIP() (string, error) {
 
 	switch status {
 	case 200:
-		result := Result{}
+		result := types.Result{}
 
 		if err := json.Unmarshal(body, &result); err != nil {
 			return "", fmt.Errorf("failed to unmarshal: %s", err)

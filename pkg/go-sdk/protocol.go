@@ -3,6 +3,8 @@ package sdk
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/elmasy-com/elmasy/pkg/types"
 )
 
 func DNSLookup(t, n string) ([]string, error) {
@@ -16,7 +18,7 @@ func DNSLookup(t, n string) ([]string, error) {
 
 	switch status {
 	case 200:
-		r := Results{}
+		r := types.Results{}
 
 		if err := json.Unmarshal(body, &r); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal: %s", err)
@@ -24,7 +26,7 @@ func DNSLookup(t, n string) ([]string, error) {
 
 		return r.Results, nil
 	case 400, 404, 500:
-		e := Error{}
+		e := types.Error{}
 
 		if err := json.Unmarshal(body, &e); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal: %s", err)
@@ -36,7 +38,7 @@ func DNSLookup(t, n string) ([]string, error) {
 	}
 }
 
-func AnalyzeTLS(version, network, ip, port, servername string) ([]TLS, error) {
+func AnalyzeTLS(version, network, ip, port, servername string) ([]types.TLS, error) {
 
 	url := fmt.Sprintf("/protocol/tls?version=%s&network=%s&target=%s&port=%s&servername=%s", version, network, ip, port, servername)
 
@@ -47,7 +49,7 @@ func AnalyzeTLS(version, network, ip, port, servername string) ([]TLS, error) {
 
 	switch status {
 	case 200:
-		var r []TLS
+		var r []types.TLS
 
 		if err := json.Unmarshal(body, &r); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal: %s", err)
@@ -55,7 +57,7 @@ func AnalyzeTLS(version, network, ip, port, servername string) ([]TLS, error) {
 
 		return r, nil
 	case 400, 500:
-		e := Error{}
+		e := types.Error{}
 
 		if err := json.Unmarshal(body, &e); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal: %s", err)
@@ -69,7 +71,7 @@ func AnalyzeTLS(version, network, ip, port, servername string) ([]TLS, error) {
 
 func Probe(protocol, network, ip, port string) (bool, error) {
 
-	url := fmt.Sprintf("/protocol/probe?protocol=%s&network=%s&ip=%s&port=%s", protocol, network, ip, port)
+	url := fmt.Sprintf("/protocol/probe?protocol=%s&network=%s&target=%s&port=%s", protocol, network, ip, port)
 
 	body, status, err := Get(url)
 	if err != nil {
@@ -78,7 +80,7 @@ func Probe(protocol, network, ip, port string) (bool, error) {
 
 	switch status {
 	case 200:
-		r := Result{}
+		r := types.Result{}
 
 		if err = json.Unmarshal(body, &r); err != nil {
 			return false, fmt.Errorf("failed to unmarshal: %s", err)
@@ -86,7 +88,7 @@ func Probe(protocol, network, ip, port string) (bool, error) {
 
 		return r.Result == "true", nil
 	case 400, 500:
-		e := Error{}
+		e := types.Error{}
 
 		if err = json.Unmarshal(body, &e); err != nil {
 			return false, fmt.Errorf("failed to unmarshal: %s", err)

@@ -3,9 +3,11 @@ package sdk
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/elmasy-com/elmasy/pkg/types"
 )
 
-func Scan(target, port, network string) ([]Target, error) {
+func Scan(target, port, network string) ([]types.Target, error) {
 
 	url := fmt.Sprintf("/scan?target=%s&port=%s&network=%s", target, port, network)
 
@@ -16,7 +18,7 @@ func Scan(target, port, network string) ([]Target, error) {
 
 	switch status {
 	case 200:
-		var r []Target
+		var r []types.Target
 
 		if err := json.Unmarshal(body, &r); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal: %s", err)
@@ -24,7 +26,7 @@ func Scan(target, port, network string) ([]Target, error) {
 
 		return r, nil
 	case 400, 403, 500:
-		e := Error{}
+		e := types.Error{}
 
 		if err := json.Unmarshal(body, &e); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal: %s", err)
@@ -45,9 +47,10 @@ func PortScan(technique, ip, ports, timeout string) (string, error) {
 		return "", err
 	}
 
+	fmt.Printf("BODY:\n%s\n\n", body)
 	switch status {
 	case 200:
-		var r Result
+		var r types.Result
 
 		if err := json.Unmarshal(body, &r); err != nil {
 			return "", fmt.Errorf("failed to unmarshal: %s", err)
@@ -55,7 +58,7 @@ func PortScan(technique, ip, ports, timeout string) (string, error) {
 
 		return r.Result, nil
 	case 400, 403:
-		e := Error{}
+		e := types.Error{}
 
 		if err := json.Unmarshal(body, &e); err != nil {
 			return "", fmt.Errorf("failed to unmarshal: %s", err)
@@ -63,7 +66,7 @@ func PortScan(technique, ip, ports, timeout string) (string, error) {
 
 		return "", e
 	case 500:
-		e := Error{}
+		e := types.Error{}
 
 		if err := json.Unmarshal(body, &e); err != nil {
 			return "", fmt.Errorf("failed to unmarshal: %s", err)

@@ -1,8 +1,8 @@
 package tls
 
 import (
-	"github.com/elmasy-com/elmasy/pkg/go-sdk"
 	"github.com/elmasy-com/elmasy/pkg/protocols/tls/ciphersuite"
+	"github.com/elmasy-com/elmasy/pkg/types"
 	"github.com/elmasy-com/identify"
 )
 
@@ -21,7 +21,7 @@ func getServerName(servername, target string) string {
 	return ""
 }
 
-func resultCiphers[T ciphersuite.CipherSuite | sdk.Cipher](ciphers []T) []Cipher {
+func resultCiphers[T ciphersuite.CipherSuite | types.Cipher](ciphers []T) []Cipher {
 
 	r := make([]Cipher, 0)
 
@@ -30,7 +30,7 @@ func resultCiphers[T ciphersuite.CipherSuite | sdk.Cipher](ciphers []T) []Cipher
 		for i := range t {
 			r = append(r, Cipher{Name: t[i].Name, Security: t[i].Security})
 		}
-	case []sdk.Cipher:
+	case []types.Cipher:
 		for i := range t {
 			r = append(r, Cipher{Name: t[i].Name, Security: t[i].Security})
 		}

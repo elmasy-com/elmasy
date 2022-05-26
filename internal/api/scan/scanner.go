@@ -3,6 +3,7 @@ package scan
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"sync"
 
 	"github.com/elmasy-com/elmasy/pkg/go-sdk"
@@ -18,8 +19,7 @@ func scanTarget(c chan<- Target, wg *sync.WaitGroup, network, ip, port, serverna
 
 	defer wg.Done()
 
-	t := Target{}
-	t.Target = ip
+	t := Target{Target: ip}
 
 	if network == "tcp" {
 		state, err := sdk.PortScan("connect", ip, port, "2")
@@ -56,6 +56,8 @@ func scanTarget(c chan<- Target, wg *sync.WaitGroup, network, ip, port, serverna
 		}
 		t.TLS = append(t.TLS, i)
 	}
+
+	sort.Slice(t.TLS, func(i, j int) bool { return t.TLS[i].Version < t.TLS[j].Version })
 
 	c <- t
 }

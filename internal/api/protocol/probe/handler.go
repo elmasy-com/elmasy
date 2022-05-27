@@ -6,13 +6,9 @@ import (
 	"time"
 
 	"github.com/elmasy-com/elmasy/internal/utils"
+	"github.com/elmasy-com/elmasy/pkg/go-sdk"
 	"github.com/elmasy-com/elmasy/pkg/protocols/dns"
-	"github.com/elmasy-com/elmasy/pkg/protocols/tls/ssl30"
-	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls10"
-	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls11"
-	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls12"
-	"github.com/elmasy-com/elmasy/pkg/protocols/tls/tls13"
-	"github.com/elmasy-com/elmasy/pkg/types"
+	etls "github.com/elmasy-com/elmasy/pkg/protocols/tls"
 	"github.com/elmasy-com/identify"
 	"github.com/gin-gonic/gin"
 )
@@ -23,7 +19,7 @@ func Get(c *gin.Context) {
 	if network != "tcp" && network != "udp" {
 		err := fmt.Errorf("Invalid network: %s", network)
 		c.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, sdk.Error{Err: err.Error()})
 		return
 	}
 
@@ -31,13 +27,13 @@ func Get(c *gin.Context) {
 	if ip == "" {
 		err := fmt.Errorf("ip is empty")
 		c.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, sdk.Error{Err: err.Error()})
 		return
 	}
 	if !identify.IsValidIP(ip) {
 		err := fmt.Errorf("Invalid ip: %s", ip)
 		c.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, sdk.Error{Err: err.Error()})
 		return
 	}
 
@@ -45,13 +41,13 @@ func Get(c *gin.Context) {
 	if port == "" {
 		err := fmt.Errorf("port is empty")
 		c.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, sdk.Error{Err: err.Error()})
 		return
 	}
 	if !identify.IsValidPort(port) {
 		err := fmt.Errorf("Invalid port: %s", port)
 		c.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, sdk.Error{Err: err.Error()})
 		return
 	}
 
@@ -63,29 +59,21 @@ func Get(c *gin.Context) {
 	switch protocol := c.Query("protocol"); protocol {
 	case "dns":
 		supported, err = dns.Probe(network, utils.IPv6BracketAdd(ip), port, 2*time.Second)
-	case "ssl30":
-		supported, err = ssl30.Probe(network, utils.IPv6BracketAdd(ip), port, 2*time.Second)
-	case "tls10":
-		supported, err = tls10.Probe(network, utils.IPv6BracketAdd(ip), port, 2*time.Second, tls10.Opts{ServerName: ""})
-	case "tls11":
-		supported, err = tls11.Probe(network, utils.IPv6BracketAdd(ip), port, 2*time.Second, tls11.Opts{ServerName: ""})
-	case "tls12":
-		supported, err = tls12.Probe(network, utils.IPv6BracketAdd(ip), port, 2*time.Second, tls12.Opts{ServerName: ""})
-	case "tsl13":
-		supported, err = tls13.Probe(network, utils.IPv6BracketAdd(ip), port, 2*time.Second, tls13.Opts{ServerName: ""})
+	case "ssl30", "tls10", "tls11", "tls12", "tls13":
+		supported, err = etls.Probe(protocol, network, utils.IPv6BracketAdd(ip), port, 2*time.Second, "")
 	default:
 		err = fmt.Errorf("Invalid protocol: %s", protocol)
 		c.Error(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, sdk.Error{Err: err.Error()})
 		return
 	}
 
 	if err != nil {
 		c.Error(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, sdk.Error{Err: err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, types.ResultBool{Result: supported})
+	c.JSON(http.StatusOK, sdk.ResultBool{Result: supported})
 
 }

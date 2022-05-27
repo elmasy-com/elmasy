@@ -53,8 +53,8 @@ func unmarshalSSLPlaintext(buf *bytebuilder.Buffer) ([]interface{}, error) {
 
 	if version := buf.ReadBytes(2); version == nil {
 		return handshakes, fmt.Errorf("failed to read protocol version")
-	} else if version[0] != VER_MAJOR || version[1] != VER_MINOR {
-		return handshakes, fmt.Errorf("invalid protocol version: 0x%02X 0x%02X", version[0], version[1])
+	} else if err := checkVersion(version[0], version[1]); err != nil {
+		return handshakes, err
 	}
 
 	if length, ok = buf.ReadUint16(); !ok {

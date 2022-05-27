@@ -1,34 +1,15 @@
 package scan
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"sync"
 
 	"github.com/elmasy-com/elmasy/internal/utils"
-	"github.com/elmasy-com/elmasy/pkg/types"
+	"github.com/elmasy-com/elmasy/pkg/go-sdk"
 	"github.com/elmasy-com/identify"
 	"github.com/gin-gonic/gin"
 )
-
-type TLS struct {
-	IP        string         `json:"ip"`
-	Version   string         `json:"version"`
-	Supported bool           `json:"supported"`
-	Ciphers   []types.Cipher `json:"ciphers"`
-	Error     error          `json:"-"`
-}
-
-type Target struct {
-	Target string `json:"target"`
-	TLS    []TLS  `json:"tls"`
-	Error  error  `json:"-"`
-}
-
-type Result struct {
-	Result []Target `json:"result"`
-}
 
 func Get(c *gin.Context) {
 
@@ -89,41 +70,32 @@ func Get(c *gin.Context) {
 		ips = append(ips, target)
 	}
 
-	targets := make(chan Target, len(ips))
+	targets := make(chan sdk.Target, len(ips))
+	errChan := make(chan error, 20)
 	var wg sync.WaitGroup
 
 	for i := range ips {
-
 		wg.Add(1)
-
-		go scanTarget(targets, &wg, network, ips[i], port, servername)
+		go scanTarget(targets, errChan, &wg, network, ips[i], port, servername)
 	}
 
 	wg.Wait()
 	close(targets)
+	close(errChan)
 
-	result := Result{}
+	result := sdk.Result{Domain: target}
+
+	for e := range errChan {
+		c.Error(e)
+		result.Errors = append(result.Errors, e.Error())
+	}
 
 	for t := range targets {
-		if t.Error != nil {
 
-			code := 0
-
-			if errors.Is(t.Error, ErrPortClosed) {
-				code = http.StatusForbidden
-			} else {
-				code = http.StatusInternalServerError
-			}
-
-			err = fmt.Errorf("failed to check %s: %s", t.Target, t.Error)
-			c.Error(err)
-			c.JSON(code, gin.H{"error": err.Error()})
-			return
-		}
-
-		result.Result = append(result.Result, t)
+		result.Targets = append(result.Targets, t)
 
 	}
 
-	c.JSON(http.StatusOK, result.Result)
+	c.JSON(http.StatusOK, result)
+
 }

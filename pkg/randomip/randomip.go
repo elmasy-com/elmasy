@@ -94,6 +94,20 @@ func GetRandomIPv6() net.IP {
 		bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]}
 }
 
+// GetRandomIP is return a random IP address.
+// The returned IP *can be* a reserved address.
+// The version of the IP protocol is random.
+func GetRandomIP() net.IP {
+
+	n := rand.Intn(2)
+
+	if n == 0 {
+		return GetRandomIPv4()
+	} else {
+		return GetRandomIPv6()
+	}
+}
+
 // GetPublicIPv4 is return a **non reserved** IPv4 address.
 func GetPublicIPv4() net.IP {
 
@@ -115,5 +129,18 @@ func GetPublicIPv6() net.IP {
 		if !IsReservedIPv6(ip) {
 			return ip
 		}
+	}
+}
+
+// GetPublicIP is return a **non reserved** IP address.
+// The version of the IP protocol is random.
+func GetPublicIP() net.IP {
+
+	n := rand.Intn(2)
+
+	if n == 0 {
+		return GetPublicIPv4()
+	} else {
+		return GetPublicIPv6()
 	}
 }

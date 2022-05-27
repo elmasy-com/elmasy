@@ -3,9 +3,9 @@ package dns
 import (
 	"net/http"
 	"sort"
+	"strings"
 
 	"github.com/elmasy-com/elmasy/pkg/protocols/dns"
-	"github.com/gin-gonic/gin"
 )
 
 // mxToString sort the MX records by preference (or by name if preferences are equal)
@@ -23,27 +23,23 @@ func mxToString(mxs []dns.MX) []string {
 	})
 
 	for i := range mxs {
-		r = append(r, mxs[i].Exchange)
+		// MX returns fqdn so trim the trailing "."
+		r = append(r, strings.TrimSuffix(mxs[i].Exchange, "."))
 	}
 
 	return r
 }
 
-func handleError(c *gin.Context, err error) {
-
-	var code int
+// Returns the status code accoding to the error message
+func getStatusCode(err error) int {
 
 	switch err.Error() {
 	case "FORMERR", "SERVFAIL", "NOTIMP", "REFUSED", "YXDOMAIN", "XRRSET", "NOTAUTH", "NOTZONE":
-		code = http.StatusInternalServerError
+		return http.StatusInternalServerError
 	case "NXDOMAIN":
-		code = http.StatusNotFound
+		return http.StatusNotFound
 	default:
-		code = http.StatusInternalServerError
+		return http.StatusInternalServerError
 
 	}
-
-	c.Error(err)
-	c.JSON(code, gin.H{"error": err.Error()})
-
 }

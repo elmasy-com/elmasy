@@ -3,7 +3,7 @@ package sdk
 import "testing"
 
 func init() {
-	API_PATH = "http://localhost:8080/api"
+	API_PATH = "https://dev.elmasy.com/api"
 }
 
 func TestGetIP(t *testing.T) {
@@ -53,6 +53,16 @@ func TestAnalyzeTLS(t *testing.T) {
 	}
 
 	t.Logf("%v", r)
+}
+
+func TestGetCertificate(t *testing.T) {
+
+	c, err := GetCertificate("tcp", "142.132.164.231", "443", "elmasy.com")
+	if err != nil {
+		t.Fatalf("FAIL: %s\n", err)
+	}
+
+	t.Logf("%#v", c)
 }
 
 func TestPortScan(t *testing.T) {

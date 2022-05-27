@@ -19,10 +19,6 @@ type TLS13 struct {
 	Ciphers       []ciphersuite.CipherSuite
 }
 
-type Opts struct {
-	ServerName string // SNI
-}
-
 func ciphersToUint16(ciphers []ciphersuite.CipherSuite) []uint16 {
 
 	v := make([]uint16, 0)
@@ -35,17 +31,17 @@ func ciphersToUint16(ciphers []ciphersuite.CipherSuite) []uint16 {
 	return v
 }
 
-func handshake(network, ip, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite, opts Opts) (TLS13, error) {
+func handshake(network, ip, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite, servername string) (TLS13, error) {
 
 	var (
 		conf   tls.Config
 		result TLS13
 	)
 
-	if opts.ServerName == "" {
+	if servername == "" {
 		conf.InsecureSkipVerify = true
 	} else {
-		conf.ServerName = opts.ServerName
+		conf.ServerName = servername
 	}
 
 	dialConn, err := net.DialTimeout(network, ip+":"+port, timeout)
@@ -82,7 +78,7 @@ func handshake(network, ip, port string, timeout time.Duration, ciphers []cipher
 		GetSessionID: nil,
 	}
 
-	if opts.ServerName != "" {
+	if servername != "" {
 		spec.Extensions = append(spec.Extensions, &tls.SNIExtension{})
 	}
 
@@ -124,13 +120,13 @@ func handshake(network, ip, port string, timeout time.Duration, ciphers []cipher
 
 // There are ciphersuites, that uTLS cant handle.
 // In this case, iterate over it, one by one. If the error message is "server chose an unconfigured cipher suite", the ciphersuite is supported by the server.
-func getUnconfiguredCiphers(network, ip, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite, opts Opts) ([]ciphersuite.CipherSuite, error) {
+func getUnconfiguredCiphers(network, ip, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite, servername string) ([]ciphersuite.CipherSuite, error) {
 
 	supported := make([]ciphersuite.CipherSuite, 0)
 
 	for i := range ciphers {
 
-		_, err := handshake(network, ip, port, timeout, []ciphersuite.CipherSuite{ciphers[i]}, opts)
+		_, err := handshake(network, ip, port, timeout, []ciphersuite.CipherSuite{ciphers[i]}, servername)
 
 		if err != nil {
 			if strings.Contains(err.Error(), "server chose an unconfigured cipher suite") {
@@ -144,7 +140,7 @@ func getUnconfiguredCiphers(network, ip, port string, timeout time.Duration, cip
 	return supported, nil
 }
 
-func getSupportedCiphers(network, ip, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite, opts Opts) ([]ciphersuite.CipherSuite, error) {
+func getSupportedCiphers(network, ip, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite, servername string) ([]ciphersuite.CipherSuite, error) {
 
 	var (
 		supported = make([]ciphersuite.CipherSuite, 0)
@@ -152,11 +148,11 @@ func getSupportedCiphers(network, ip, port string, timeout time.Duration, cipher
 
 	for {
 
-		result, err := handshake(network, ip, port, timeout, ciphers, opts)
+		result, err := handshake(network, ip, port, timeout, ciphers, servername)
 		if err != nil {
 
 			if strings.Contains(err.Error(), "server chose an unconfigured cipher suite") {
-				unconfigured, err := getUnconfiguredCiphers(network, ip, port, timeout, ciphers, opts)
+				unconfigured, err := getUnconfiguredCiphers(network, ip, port, timeout, ciphers, servername)
 				if err != nil {
 					return supported, fmt.Errorf("failed to get unconfigured ciphers: %s", err)
 				}
@@ -176,11 +172,11 @@ func getSupportedCiphers(network, ip, port string, timeout time.Duration, cipher
 	}
 }
 
-func Scan(network, ip, port string, timeout time.Duration, opts Opts) (TLS13, error) {
+func Scan(network, ip, port string, timeout time.Duration, servername string) (TLS13, error) {
 
 	ciphers := ciphersuite.Get(ciphersuite.TLS13)
 
-	result, err := handshake(network, ip, port, timeout, ciphers, opts)
+	result, err := handshake(network, ip, port, timeout, ciphers, servername)
 	if err != nil {
 		return result, fmt.Errorf("handshake failed: %s", err)
 	}
@@ -191,7 +187,7 @@ func Scan(network, ip, port string, timeout time.Duration, opts Opts) (TLS13, er
 
 	ciphers = ciphersuite.Remove(ciphers, result.DefaultCipher)
 
-	supported, err := getSupportedCiphers(network, ip, port, timeout, ciphers, opts)
+	supported, err := getSupportedCiphers(network, ip, port, timeout, ciphers, servername)
 	if err != nil {
 		return result, fmt.Errorf("failed to get supported ciphers: %s", err)
 	}
@@ -202,11 +198,13 @@ func Scan(network, ip, port string, timeout time.Duration, opts Opts) (TLS13, er
 
 }
 
-func Probe(network, ip, port string, timeout time.Duration, opts Opts) (bool, error) {
+func Handshake(network, ip, port string, timeout time.Duration, servername string) (TLS13, error) {
+	return handshake(network, ip, port, timeout, ciphersuite.Get(ciphersuite.TLS13), servername)
+}
 
-	ciphers := ciphersuite.Get(ciphersuite.TLS13)
+func Probe(network, ip, port string, timeout time.Duration, servername string) (bool, error) {
 
-	r, err := handshake(network, ip, port, timeout, ciphers, opts)
+	r, err := Handshake(network, ip, port, timeout, servername)
 
 	return r.Supported, err
 }

@@ -20,11 +20,6 @@ type Params struct {
 	Port      int
 }
 
-type PortString struct {
-	Port  string `json:"port"`
-	State string `json:"state"`
-}
-
 // Parse the query params and handle error.
 // In case of error, this function set error in the context and also return it.
 // So, in the calling function, it is enough to return if err != nil.

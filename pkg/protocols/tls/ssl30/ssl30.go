@@ -60,8 +60,6 @@ func readServerResponse(conn *net.Conn, timeout time.Duration) ([]byte, error) {
 			// Some servers send an RST straight after a Alert(Handshake failure) packet *at the first handshake*.
 			// The alert size (including SSLPLaintext) should be 7 byte.
 			err = nil
-		} else {
-			err = fmt.Errorf("failed to read response: %s", err)
 		}
 	}
 
@@ -105,7 +103,7 @@ func handshake(network, ip, port string, timeout time.Duration, ciphers []cipher
 
 	result, err := unmarshalResponse(resp)
 	if err != nil {
-		return result, fmt.Errorf("failed to unmarshal response: %s", err)
+		return result, err
 	}
 
 	if result.Supported {
@@ -158,7 +156,7 @@ func Scan(network, ip, port string, timeout time.Duration) (SSL30, error) {
 
 	supported, err := getSupportedCiphers(network, ip, port, timeout, ciphers)
 	if err != nil {
-		return result, fmt.Errorf("failed to get supported ciphers: %s", err)
+		return result, fmt.Errorf("supported ciphers failed: %s", err)
 	}
 
 	result.Ciphers = append(result.Ciphers, result.DefaultCipher)
@@ -167,11 +165,13 @@ func Scan(network, ip, port string, timeout time.Duration) (SSL30, error) {
 	return result, nil
 }
 
+func Handshake(network, ip, port string, timeout time.Duration) (SSL30, error) {
+	return handshake(network, ip, port, timeout, ciphersuite.Get(ciphersuite.SSL30))
+}
+
 func Probe(network, ip, port string, timeout time.Duration) (bool, error) {
 
-	ciphers := ciphersuite.Get(ciphersuite.SSL30)
-
-	r, err := handshake(network, ip, port, timeout, ciphers)
+	r, err := Handshake(network, ip, port, timeout)
 
 	return r.Supported, err
 }

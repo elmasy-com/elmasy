@@ -3,27 +3,25 @@ package sdk
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/elmasy-com/elmasy/pkg/types"
 )
 
 func GetRandomIP(version string) (string, error) {
 
-	body, status, err := Get("/random/ip/" + version)
+	body, status, err := Get("/random/ip?version=%s" + version)
 	if err != nil {
 		return "", err
 	}
 
 	switch status {
 	case 200:
-		r := types.Result{}
+		r := ResultStr{}
 
 		if err := json.Unmarshal(body, &r); err != nil {
 			return "", fmt.Errorf("failed to unmarshal: %s", err)
 		}
 		return r.Result, nil
 	case 400:
-		e := types.Error{}
+		e := Error{}
 
 		if err := json.Unmarshal(body, &e); err != nil {
 			return "", fmt.Errorf("failed to unmarshal: %s", err)
@@ -43,7 +41,7 @@ func GetRandomPort() (string, error) {
 
 	switch status {
 	case 200:
-		r := types.Result{}
+		r := ResultStr{}
 
 		if err := json.Unmarshal(body, &r); err != nil {
 			return "", fmt.Errorf("failed to unmarshal: %s", err)

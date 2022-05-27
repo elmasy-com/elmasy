@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/elmasy-com/elmasy/pkg/go-sdk"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,6 +20,6 @@ func Get(c *gin.Context) {
 	case "*/*":
 		c.String(http.StatusOK, "%d", n)
 	case "application/json":
-		c.JSON(http.StatusOK, gin.H{"result": strconv.Itoa(n)})
+		c.JSON(http.StatusOK, sdk.ResultStr{Result: strconv.Itoa(n)})
 	}
 }

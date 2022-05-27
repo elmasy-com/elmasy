@@ -23,13 +23,9 @@ type TLS11 struct {
 	Ciphers       []ciphersuite.CipherSuite
 }
 
-type Opts struct {
-	ServerName string // SNI
-}
+func sendClientHello(conn *net.Conn, timeout time.Duration, ciphers []ciphersuite.CipherSuite, servername string) error {
 
-func sendClientHello(conn *net.Conn, timeout time.Duration, ciphers []ciphersuite.CipherSuite, opts Opts) error {
-
-	hello := createPacketClientHello(ciphers, opts.ServerName)
+	hello := createPacketClientHello(ciphers, servername)
 
 	if err := (*conn).SetWriteDeadline(time.Now().Add(timeout)); err != nil {
 		return fmt.Errorf("failed to set write deadline: %s", err)
@@ -64,8 +60,6 @@ func readServerResponse(conn *net.Conn, timeout time.Duration) ([]byte, error) {
 			// Some servers send an RST straight after a Alert(Handshake failure) packet *at the first handshake*.
 			// The alert size (including SSLPLaintext) should be 7 byte.
 			err = nil
-		} else {
-			err = fmt.Errorf("failed to read response: %s", err)
 		}
 	}
 
@@ -90,7 +84,7 @@ func sendClosureALert(conn *net.Conn, timeout time.Duration) error {
 }
 
 // Do the handshake and return the response as a byte slice.
-func handshake(network, ip, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite, opts Opts) (TLS11, error) {
+func handshake(network, ip, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite, servername string) (TLS11, error) {
 
 	conn, err := net.DialTimeout(network, ip+":"+port, timeout)
 	if err != nil {
@@ -98,7 +92,7 @@ func handshake(network, ip, port string, timeout time.Duration, ciphers []cipher
 	}
 	defer conn.Close()
 
-	if err := sendClientHello(&conn, timeout, ciphers, opts); err != nil {
+	if err := sendClientHello(&conn, timeout, ciphers, servername); err != nil {
 		return TLS11{}, fmt.Errorf("failed to send ClientHello: %s", err)
 	}
 
@@ -109,7 +103,7 @@ func handshake(network, ip, port string, timeout time.Duration, ciphers []cipher
 
 	result, err := unmarshalResponse(resp)
 	if err != nil {
-		return result, fmt.Errorf("failed to unmarshal response: %s", err)
+		return result, err
 	}
 
 	if result.Supported {
@@ -121,7 +115,7 @@ func handshake(network, ip, port string, timeout time.Duration, ciphers []cipher
 	return result, nil
 }
 
-func getSupportedCiphers(network, ip, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite, opts Opts) ([]ciphersuite.CipherSuite, error) {
+func getSupportedCiphers(network, ip, port string, timeout time.Duration, ciphers []ciphersuite.CipherSuite, servername string) ([]ciphersuite.CipherSuite, error) {
 
 	var (
 		supported = make([]ciphersuite.CipherSuite, 0)
@@ -129,7 +123,7 @@ func getSupportedCiphers(network, ip, port string, timeout time.Duration, cipher
 
 	for {
 
-		result, err := handshake(network, ip, port, timeout, ciphers, opts)
+		result, err := handshake(network, ip, port, timeout, ciphers, servername)
 		if err != nil && !strings.Contains(err.Error(), "connection reset by peer") {
 			return supported, fmt.Errorf("failed to do handshake: %s", err)
 		}
@@ -144,11 +138,11 @@ func getSupportedCiphers(network, ip, port string, timeout time.Duration, cipher
 
 }
 
-func Scan(network, ip, port string, timeout time.Duration, opts Opts) (TLS11, error) {
+func Scan(network, ip, port string, timeout time.Duration, servername string) (TLS11, error) {
 
 	ciphers := ciphersuite.Get(ciphersuite.TLS11)
 
-	result, err := handshake(network, ip, port, timeout, ciphers, opts)
+	result, err := handshake(network, ip, port, timeout, ciphers, servername)
 	if err != nil {
 		return result, fmt.Errorf("handshake failed: %s", err)
 	}
@@ -159,9 +153,9 @@ func Scan(network, ip, port string, timeout time.Duration, opts Opts) (TLS11, er
 
 	ciphers = ciphersuite.Remove(ciphers, result.DefaultCipher)
 
-	supported, err := getSupportedCiphers(network, ip, port, timeout, ciphers, opts)
+	supported, err := getSupportedCiphers(network, ip, port, timeout, ciphers, servername)
 	if err != nil {
-		return result, fmt.Errorf("failed to get supported ciphers: %s", err)
+		return result, fmt.Errorf("supported ciphers failed: %s", err)
 	}
 
 	result.Ciphers = append(result.Ciphers, result.DefaultCipher)
@@ -170,11 +164,13 @@ func Scan(network, ip, port string, timeout time.Duration, opts Opts) (TLS11, er
 	return result, nil
 }
 
-func Probe(network, ip, port string, timeout time.Duration, opts Opts) (bool, error) {
+func Handshake(network, ip, port string, timeout time.Duration, servername string) (TLS11, error) {
+	return handshake(network, ip, port, timeout, ciphersuite.Get(ciphersuite.TLS11), servername)
+}
 
-	ciphers := ciphersuite.Get(ciphersuite.TLS11)
+func Probe(network, ip, port string, timeout time.Duration, servername string) (bool, error) {
 
-	r, err := handshake(network, ip, port, timeout, ciphers, opts)
+	r, err := Handshake(network, ip, port, timeout, servername)
 
 	return r.Supported, err
 }

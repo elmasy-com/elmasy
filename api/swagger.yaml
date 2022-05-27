@@ -7,6 +7,7 @@ info:
 servers:
   - url: https://scan.elmasy.com/api
   - url: http://localhost:8080/api
+  - url: https://dev.elmasy.com/api
 
 tags:
   - name: Basic
@@ -35,9 +36,9 @@ paths:
                 type: string
             application/json:
               schema:
-                $ref: "#/components/schemas/Result"       
+                $ref: "#/components/schemas/ResultStr"       
 
-  /random/ip/{version}:
+  /random/ip/:
     get:
       summary: Get a random public IP address.
       description: Returns a random public IP address.
@@ -45,9 +46,9 @@ paths:
         - Random
       parameters:
         - name: version
-          description: The version of the IP protocol. Valid versions are `ipv4`/`4` or `ipv6`/`6`.
-          in: path
-          required: true
+          description: The version of the IP protocol. Valid versions are `ipv4`/`4` or `ipv6`/`6`. If `version` is omitted, the return IP version is random.
+          in: query
+          required: false
           schema:
             type: string
       responses:
@@ -56,7 +57,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Result"
+                $ref: "#/components/schemas/ResultStr"
         400:
           description: Invalid IP protocol version.
           content:
@@ -76,7 +77,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Result"
+                $ref: "#/components/schemas/ResultStr"
             "*/*":
               schema:
                 type: string
@@ -107,7 +108,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Results"
+                $ref: "#/components/schemas/ResultStrs"
         400:
           description: Invalid type or domain.
           content:
@@ -134,8 +135,7 @@ paths:
     get:
       summary: Analyze SSL/TLS.
       description: >
-        Analyze SSL/TLS on target:port. Returns the supported ciphers.
-        If target is a hostname, check every `A` and `AAAA` record.
+        A **low level** API to analyze SSL/TLS on ip:port. Returns the supported ciphers.
       tags:
         - Protocol
       parameters:
@@ -151,8 +151,62 @@ paths:
           required: false
           schema:
             type: string
-        - name: target
-          description: The target IP address or hostname.
+        - name: ip
+          description: The target IP address.
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: port
+          description: The target port.
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: servername
+          description: The server name for SNI. If omitted, SNI is not added to ServerHello.
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TLSVersion"
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: An error occured while scanning.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  
+  /protocol/tls/certificate:
+    get:
+      summary: Parse TLS certificate.
+      description: >
+        A **Low Level** API parse a TLS certificate.
+      tags:
+        - Protocol
+      parameters:
+        - name: network
+          description: Target network. Can be `tcp` or `udp`. Defaults to `tcp`.
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: ip
+          description: The target IP address.
           in: query
           required: true
           schema:
@@ -175,17 +229,15 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/TLS"
+                $ref: "#/components/schemas/Cert"
         400:
-          description: Bad request
+          description: Bad Request.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
         500:
-          description: An error occured while scanning.
+          description: Internal Server Error.
           content:
             application/json:
               schema:
@@ -272,19 +324,19 @@ paths:
             type: string
       responses:
         200:
-          description: Success.
+          description: Success. This not means, that no error occured while scanning! These errors are returned in `errors` array.
           content:
             application/json:
               schema:
-                $ref: "#components/schemas/Scan"
+                $ref: "#components/schemas/Result"
         400:
           description: Invalid target or port.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-        403:
-          description: Target port is closed.
+        404:
+          description: Target domain not found.
           content:
             application/json:
               schema:
@@ -336,7 +388,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Result"
+                $ref: "#/components/schemas/ResultStr"
         400:
           description: Invalid or missing query parameter.
           content:
@@ -362,7 +414,7 @@ components:
 
   schemas:
 
-    Result:
+    ResultStr:
       type: object
       properties:
         result:
@@ -374,7 +426,7 @@ components:
         result:
           type: boolean
       
-    Results:
+    ResultStrs:
       type: object
       properties:
         results:
@@ -395,7 +447,78 @@ components:
           type: array
           items:
             type: string
-    TLS:
+
+    Cipher:
+      type: object
+      properties:
+        name:
+          type: string
+        security:
+          type: string
+    
+    PubKey:
+      type: object
+      properties:
+        algo:
+          type: string
+        size:
+          type: integer
+        key:
+          type: string
+        exponent:
+          type: integer
+        modulus:
+          type: string
+
+    Additional:
+      type: object
+      properties:
+        commonname:
+          type: string
+        hash:
+          type: string
+        notafter:
+          type: string
+        issuer:
+          type: string
+        publickey:
+          $ref: "#/components/schemas/PubKey"
+        signaturealgorithm:
+          type: string
+
+    Cert:
+      type: object
+      properties:
+        commonname:
+          type: string
+        hash:
+          type: string
+        alternativenames:
+          type: array
+          items:
+            type: string
+        signaturealgorithm:
+          type: string
+        publickey:
+          $ref: "#/components/schemas/PubKey"
+        serialnumber:
+          type: string
+        issuer:
+          type: string
+        notbeforre:
+          type: string
+        notafter:
+          type: string
+        verified:
+          type: boolean
+        verifiederror:
+          type: string
+        chain:
+          type: array
+          items:
+            $ref: "#/components/schemas/Additional"
+  
+    TLSVersion:
       type: object
       properties:
         version:
@@ -407,33 +530,40 @@ components:
           items:
             type: object
             properties:
-              type: string
-            security:
-              type: string
+              name:
+                type: string
+              security:
+                type: string
+    TLS:
+      type: object
+      properties:
+        versions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TLSVersion"
+        cert:
+          $ref: "#/components/schemas/Cert"
 
     Target:
       type: object
       properties:
-        target:
+        ip:
           type: string
         tls:
-          type: array
-          items:
-            $ref: "#/components/schemas/TLS"
-    Scan:
-      type: array
-      items:
-        $ref: "#/components/schemas/Target"
-    Port:
+          $ref: "#/components/schemas/TLS"
+
+    Result:
       type: object
       properties:
-        port:
+        domain:
           type: string
-        state:
-          type: string
-    Ports:
-      type: array
-      items:
-        $ref: "#/components/schemas/Port"
-
+        targets:
+          type: array
+          items:
+            $ref: "#/components/schemas/Target"
+        errors:
+          type: array
+          items:
+            type: string
+        
         

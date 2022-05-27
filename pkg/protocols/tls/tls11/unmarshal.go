@@ -1,8 +1,6 @@
 package tls11
 
 import (
-	"fmt"
-
 	"github.com/elmasy-com/bytebuilder"
 )
 
@@ -18,7 +16,7 @@ func unmarshalResponse(bytes []byte) (TLS11, error) {
 
 		message, err := unmarshalSSLPlaintext(&buf)
 		if err != nil {
-			return result, fmt.Errorf("failed to unmarshal SSLPlaintext: %s", err)
+			return result, err
 		}
 
 		messages = append(messages, message...)

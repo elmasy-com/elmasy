@@ -36,8 +36,9 @@ func unmarshalServerHello(bytes []byte) (serverHello, error) {
 
 	if hello.Version = buf.ReadBytes(2); hello.Version == nil {
 		return hello, fmt.Errorf("failed to read Version")
-	} else if hello.Version[0] != VER_MAJOR || hello.Version[1] != VER_MINOR {
-		return hello, fmt.Errorf("invalid server version: 0x%02x 0x%02x", hello.Version[0], hello.Version[1])
+	}
+	if err := checkVersion(hello.Version[0], hello.Version[1]); err != nil {
+		return hello, err
 	}
 
 	if hello.Random, err = unmarshalRandom(buf.ReadBytes(32)); err != nil {
@@ -57,4 +58,21 @@ func unmarshalServerHello(bytes []byte) (serverHello, error) {
 	}
 
 	return hello, nil
+}
+
+func checkVersion(major, minor byte) error {
+
+	if major == 0x54 && minor == 0x54 {
+		return fmt.Errorf("unencrypted HTTP response")
+	}
+
+	if major != 0x03 {
+		return fmt.Errorf("invalid protocol version: 0x%02x 0x%02x", major, minor)
+	}
+
+	if minor != 0x00 && minor != 0x01 && minor != 0x02 && minor != 0x03 {
+		return fmt.Errorf("invalid protocol version: 0x%02x 0x%02x", major, minor)
+	}
+
+	return nil
 }

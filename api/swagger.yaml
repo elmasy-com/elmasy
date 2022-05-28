@@ -473,45 +473,45 @@ components:
     Additional:
       type: object
       properties:
-        commonname:
+        commonName:
           type: string
         hash:
           type: string
-        notafter:
+        notAfter:
           type: string
         issuer:
           type: string
-        publickey:
+        publicKey:
           $ref: "#/components/schemas/PubKey"
-        signaturealgorithm:
+        signatureAlgorithm:
           type: string
 
     Cert:
       type: object
       properties:
-        commonname:
+        commonName:
           type: string
         hash:
           type: string
-        alternativenames:
+        alternativeNames:
           type: array
           items:
             type: string
-        signaturealgorithm:
+        signatureAlgorithm:
           type: string
-        publickey:
+        publicKey:
           $ref: "#/components/schemas/PubKey"
-        serialnumber:
+        serialNumber:
           type: string
         issuer:
           type: string
-        notbefore:
+        notBefore:
           type: string
-        notafter:
+        notAfter:
           type: string
         verified:
           type: boolean
-        verifiederror:
+        verifiedError:
           type: string
         chain:
           type: array

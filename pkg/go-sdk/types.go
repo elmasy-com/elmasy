@@ -35,27 +35,27 @@ type PubKey struct {
 
 // Additional is the additional certificates (eg.: intermediate cert)
 type Additional struct {
-	CommonName         string `json:"commonname"`
+	CommonName         string `json:"commonName"`
 	Hash               string `json:"hash"`
-	NotAfter           string `json:"notafter"`
+	NotAfter           string `json:"notAfter"`
 	Issuer             string `json:"issuer"`
-	PublicKey          PubKey `json:"publickey"`
-	SignatureAlgorithm string `json:"signaturealgorithm"`
+	PublicKey          PubKey `json:"publicKey"`
+	SignatureAlgorithm string `json:"signatureAlgorithm"`
 }
 
 // Cert is hold the fields "interesting" part of the certficate chain.
 type Cert struct {
-	CommonName         string       `json:"commonname"`
+	CommonName         string       `json:"commonName"`
 	Hash               string       `json:"hash"` // SHA256
-	AlternativeNames   []string     `json:"alternativenames"`
-	SignatureAlgorithm string       `json:"signaturealgorithm"`
-	PublicKey          PubKey       `json:"publickey"`
-	SerialNumber       string       `json:"serialnumber"`
+	AlternativeNames   []string     `json:"alternativeNames"`
+	SignatureAlgorithm string       `json:"signatureAlgorithm"`
+	PublicKey          PubKey       `json:"publicKey"`
+	SerialNumber       string       `json:"serialNumber"`
 	Issuer             string       `json:"issuer"`
-	NotBefore          string       `json:"notbefore"`
-	NotAfter           string       `json:"notafter"`
+	NotBefore          string       `json:"notBefore"`
+	NotAfter           string       `json:"notAfter"`
 	Verified           bool         `json:"verified"`
-	VerifiedError      string       `json:"verifiederror"`
+	VerifiedError      string       `json:"verifiedError"`
 	Chain              []Additional `json:"chain"`
 }
 

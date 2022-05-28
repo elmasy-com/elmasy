@@ -3,7 +3,10 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/elmasy-com/elmasy)](https://goreportcard.com/report/github.com/elmasy-com/elmasy)
 
 <p align="center">
-  <img src="https://elmasy.com/logo.png" width="25%" height="25%"/>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/elmasy-com/logo/raw/main/png/logo_white_512.png">
+    <img width="25%" height="25%" alt="Elmasy logo" src="https://github.com/elmasy-com/logo/raw/main/png/logo_black_512.png">
+  </picture>
 </p>
 
 

@@ -505,7 +505,7 @@ components:
           type: string
         issuer:
           type: string
-        notbeforre:
+        notbefore:
           type: string
         notafter:
           type: string

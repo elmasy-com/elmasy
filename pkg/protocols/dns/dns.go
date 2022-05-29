@@ -31,9 +31,12 @@ func getServer() string {
 
 	var r string
 
-	if len(conf.Servers) == 1 {
+	switch len(conf.Servers) {
+	case 0:
+		r = "1.1.1.1"
+	case 1:
 		r = conf.Servers[0]
-	} else {
+	default:
 		r = conf.Servers[rand.Intn(len(conf.Servers))]
 	}
 

@@ -1,13 +1,20 @@
 package certificate
 
 import (
+	"bytes"
+	"crypto"
 	"crypto/sha256"
 	"crypto/x509"
 	"fmt"
+	"io"
 	"math/big"
+	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	etls "github.com/elmasy-com/elmasy/pkg/protocols/tls"
+	"golang.org/x/crypto/ocsp"
 )
 
 type PubKey struct {
@@ -60,6 +67,58 @@ func Grab(network, ip, port string, timeout time.Duration, servername string) ([
 	return nil, fmt.Errorf("TLS not supported")
 }
 
+func verifyOCSP(leaf x509.Certificate, issuer x509.Certificate) error {
+
+	opts := ocsp.RequestOptions{Hash: crypto.SHA1}
+
+	buf, err := ocsp.CreateRequest(&leaf, &issuer, &opts)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, leaf.OCSPServer[0], bytes.NewBuffer(buf))
+	if err != nil {
+		return err
+	}
+
+	url, err := url.Parse(leaf.OCSPServer[0])
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Content-Type", "application/ocsp-request")
+	req.Header.Add("Accept", "application/ocsp-response")
+	req.Header.Add("host", url.Host)
+
+	client := http.Client{Timeout: 5 * time.Second}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	ocspResp, err := ocsp.ParseResponseForCert(body, &leaf, &issuer)
+	if err != nil {
+		return err
+	}
+
+	switch ocspResp.Status {
+	case ocsp.Good:
+		return nil
+	case ocsp.Revoked:
+		return fmt.Errorf("revoked")
+	case ocsp.Unknown:
+		return fmt.Errorf("unknown")
+	default:
+		return fmt.Errorf("invalid status: %d", ocspResp.Status)
+	}
+}
+
 func Verify(certs []x509.Certificate, servername string) error {
 
 	if len(certs) < 1 {
@@ -77,9 +136,20 @@ func Verify(certs []x509.Certificate, servername string) error {
 		opts.Intermediates = pool
 	}
 
-	_, err := certs[0].Verify(opts)
+	if _, err := certs[0].Verify(opts); err != nil {
+		// remove the "x509: " prefix
+		e := strings.TrimPrefix(err.Error(), "x509: ")
+		return fmt.Errorf("%s", e)
+	}
 
-	return err
+	if len(certs[0].OCSPServer) > 0 && len(certs) >= 2 {
+
+		if err := verifyOCSP(certs[0], certs[1]); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // parseLeafCert parse the leaf cert and fill the fields of r (result Cert)

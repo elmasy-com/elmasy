@@ -7,6 +7,8 @@ User=elmasy
 Group=elmasy
 WorkingDirectory=/opt/elmasy
 ExecStart=/opt/elmasy/elmasy
+StandardOutput=file:/var/log/elmasy.log
+StandardError=file:/var/log/elmasy.log
 
 [Install]
 WantedBy=multi-user.target

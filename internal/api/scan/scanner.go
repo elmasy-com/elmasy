@@ -17,19 +17,40 @@ func scanTarget(c chan<- sdk.Target, errors chan<- error, wg *sync.WaitGroup, ne
 
 	t := sdk.Target{IP: ip}
 
-	if network == "tcp" {
+	switch network {
+	case "tcp":
 		state, err := sdk.PortScan("connect", ip, port, "2")
 		if err != nil {
-			errors <- fmt.Errorf("failed to scan %s:%s: %s", ip, port, err)
-			c <- t
+			errors <- fmt.Errorf("%s://%s:%s -> Port scan failed:%s", network, utils.IPv6BracketAdd(ip), port, err)
 			return
 		}
 
 		if state != "open" {
-			errors <- fmt.Errorf("%s:%s is %s", ip, port, state)
-			c <- t
+			errors <- fmt.Errorf("%s://%s:%s -> Port is %s", network, utils.IPv6BracketAdd(ip), port, state)
 			return
 		}
+
+		supported, err := sdk.Probe("tls", network, ip, port)
+		if err != nil {
+			errors <- fmt.Errorf("%s://%s:%s -> TLS probe failed: %s", network, utils.IPv6BracketAdd(ip), port, err)
+			return
+		}
+		if !supported {
+			errors <- fmt.Errorf("%s://%s:%s -> TLS not supported", network, utils.IPv6BracketAdd(ip), port)
+			return
+		}
+
+	case "udp":
+		supported, err := sdk.Probe("tls", network, ip, port)
+		if err != nil {
+			errors <- fmt.Errorf("%s://%s:%s -> TLS probe failed: %s", network, utils.IPv6BracketAdd(ip), port, err)
+			return
+		}
+		if !supported {
+			errors <- fmt.Errorf("%s://%s:%s -> TLS not supported", network, utils.IPv6BracketAdd(ip), port)
+			return
+		}
+
 	}
 
 	tlsResults := make(chan sdk.TLSVersion, len(SupportedTLS))

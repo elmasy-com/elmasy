@@ -253,7 +253,7 @@ paths:
       parameters:
         - name: protocol
           description: > 
-            Protocol to probe. Currently supported: `dns`, `ssl30`, `tls10`, `tls11`, `tls12` and `tls13`.
+            Protocol to probe. Currently supported: `dns`, `ssl30`, `tls10`, `tls11`, `tls12`, `tls13` and `tls`. If `tls` selected, every versions will be probed and report if any version is supported.
           in: query
           required: true
           schema:

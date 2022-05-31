@@ -59,7 +59,7 @@ func Get(c *gin.Context) {
 	switch protocol := c.Query("protocol"); protocol {
 	case "dns":
 		supported, err = dns.Probe(network, utils.IPv6BracketAdd(ip), port, 2*time.Second)
-	case "ssl30", "tls10", "tls11", "tls12", "tls13":
+	case "ssl30", "tls10", "tls11", "tls12", "tls13", "tls":
 		supported, err = etls.Probe(protocol, network, utils.IPv6BracketAdd(ip), port, 2*time.Second, "")
 	default:
 		err = fmt.Errorf("Invalid protocol: %s", protocol)

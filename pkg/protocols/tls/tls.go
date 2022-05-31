@@ -67,6 +67,8 @@ func Handshake(version, network, ip, port string, timeout time.Duration, servern
 
 func Probe(version, network, ip, port string, timeout time.Duration, servername string) (bool, error) {
 
+	versions := []string{"tls12", "tls11", "tls13", "tls10", "ssl30"}
+
 	switch version {
 	case "ssl30":
 		r, err := ssl30.Probe(network, ip, port, timeout)
@@ -83,6 +85,20 @@ func Probe(version, network, ip, port string, timeout time.Duration, servername 
 	case "tls13":
 		r, err := tls13.Probe(network, ip, port, timeout, servername)
 		return r, err
+	case "tls":
+
+		for i := range versions {
+			supported, err := Probe(versions[i], network, ip, port, timeout, servername)
+			if err != nil {
+				return false, err
+			}
+
+			if supported {
+				return true, nil
+			}
+		}
+
+		return false, nil
 	default:
 		return false, fmt.Errorf("invalid version: %s", version)
 	}

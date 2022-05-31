@@ -99,7 +99,7 @@ pack() {
 
 	echo "Creating tar archive..."
 	cd build
-	tar -cf elmasy_$(git log -n 1 --pretty=format:"%H").tar elmasy/
+	tar -cf elmasy_$(git describe --tags).tar elmasy/
 	rm -rf elmasy/
 	cd ..
 }

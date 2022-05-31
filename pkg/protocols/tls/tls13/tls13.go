@@ -51,6 +51,10 @@ func handshake(network, ip, port string, timeout time.Duration, ciphers []cipher
 	uTlsConn := tls.UClient(dialConn, &conf, tls.HelloCustom)
 	defer uTlsConn.Close()
 
+	if err := uTlsConn.SetDeadline(time.Now().Add(timeout)); err != nil {
+		return result, err
+	}
+
 	spec := tls.ClientHelloSpec{
 		TLSVersMax:   tls.VersionTLS13,
 		TLSVersMin:   tls.VersionTLS10,
@@ -96,6 +100,9 @@ func handshake(network, ip, port string, timeout time.Duration, ciphers []cipher
 			return result, nil
 		case strings.Contains(err.Error(), "EOF"):
 			// Based on the tests, EOF means that no reaction to handshake, a "close notify" or TCP RST.
+			return result, nil
+		case strings.Contains(err.Error(), "i/o timeout"):
+			// Unresponsive server
 			return result, nil
 		default:
 			return result, fmt.Errorf("failed to handshake: %s", err)

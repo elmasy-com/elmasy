@@ -31,7 +31,8 @@ func parseQuery(c *gin.Context) (Params, error) {
 
 	if params.Technique != "syn" &&
 		params.Technique != "stealth" &&
-		params.Technique != "connect" {
+		params.Technique != "connect" &&
+		params.Technique != "udp" {
 
 		err := fmt.Errorf("Invalid technique: %s", params.Technique)
 		c.Error(err)

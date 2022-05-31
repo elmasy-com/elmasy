@@ -25,6 +25,8 @@ func Get(c *gin.Context) {
 		result, errs = portscan.StealthScan(params.IP, []int{params.Port}, params.Timeout)
 	case "connect":
 		result, errs = portscan.ConnectScan(params.IP, []int{params.Port}, params.Timeout)
+	case "udp":
+		result, errs = portscan.UDPScan(params.IP, []int{params.Port}, params.Timeout)
 	}
 
 	if len(errs) > 0 {
@@ -38,10 +40,20 @@ func Get(c *gin.Context) {
 		return
 	}
 
-	if len(result) != 1 {
-		c.Error(fmt.Errorf("Invalid number of result at single port: %d", len(result)))
+	switch len(result) {
+	case 0:
+		err := fmt.Errorf("zero result")
+		c.Error(err)
+		c.JSON(http.StatusInternalServerError, sdk.Error{Err: err.Error()})
+	case 1:
+		c.JSON(http.StatusOK, sdk.ResultStr{Result: result[0].State.String()})
+	default:
+		err := fmt.Errorf("Invalid number of result at single port: %d", len(result))
+		c.Error(err)
 		c.Error(fmt.Errorf("%#v", result))
 	}
+	if len(result) != 1 {
 
-	c.JSON(http.StatusOK, sdk.ResultStr{Result: result[0].State.String()})
+	}
+
 }

@@ -41,6 +41,18 @@ func scanTarget(c chan<- sdk.Target, errors chan<- error, wg *sync.WaitGroup, ne
 		}
 
 	case "udp":
+
+		state, err := sdk.PortScan("udp", ip, port, "2")
+		if err != nil {
+			errors <- fmt.Errorf("%s://%s:%s -> Port scan failed:%s", network, utils.IPv6BracketAdd(ip), port, err)
+			return
+		}
+
+		if state == "closed" {
+			errors <- fmt.Errorf("%s://%s:%s -> Port is %s", network, utils.IPv6BracketAdd(ip), port, state)
+			return
+		}
+
 		supported, err := sdk.Probe("tls", network, ip, port)
 		if err != nil {
 			errors <- fmt.Errorf("%s://%s:%s -> TLS probe failed: %s", network, utils.IPv6BracketAdd(ip), port, err)

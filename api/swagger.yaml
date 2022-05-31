@@ -357,7 +357,7 @@ paths:
         - Scan
       parameters:
         - name: technique
-          description: The portscan technique. Can be `syn`/`stealth` or `connect`. If omitted, `connect` is used.
+          description: The portscan technique. Can be `syn`/`stealth`, `connect` or `udp`. If omitted, `connect` is used.
           in: query
           required: false
           schema:

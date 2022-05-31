@@ -6,7 +6,7 @@ type Port struct {
 }
 type Result []Port
 
-// GetPorts returns the ports from  r with state s.
+// GetPortsInt returns []int{ports} from r with state s.
 func (r *Result) GetPortsInt(s State) []int {
 
 	v := make([]int, 0)
@@ -20,6 +20,7 @@ func (r *Result) GetPortsInt(s State) []int {
 	return v
 }
 
+// GetPorts returns []Port from r with state s.
 func (r *Result) GetPorts(s State) []Port {
 
 	v := make([]Port, 0)
@@ -33,6 +34,7 @@ func (r *Result) GetPorts(s State) []Port {
 	return v
 }
 
+// Len return the number of ports with state s.
 func (r *Result) Len(s State) int {
 
 	v := 0

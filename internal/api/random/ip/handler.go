@@ -10,9 +10,7 @@ import (
 
 func Get(c *gin.Context) {
 
-	c.Query("version")
-
-	switch version := c.Param("version"); version {
+	switch version := c.Query("version"); version {
 	case "ipv4", "4":
 		c.JSON(http.StatusOK, sdk.ResultStr{Result: randomip.GetPublicIPv4().String()})
 	case "ipv6", "6":
